@@ -23,6 +23,7 @@ import { LogoIcon } from "../Logo";
 import { WordsHistory } from "./WordsHistory";
 import "../../styles/result.css";
 import { appPath } from "../../lib/base";
+import { publicHost } from "../../lib/base";
 
 const ResultChart = lazy(() => import("./ResultChart").then((m) => ({ default: m.ResultChart })));
 
@@ -382,7 +383,7 @@ export function ResultPage() {
               <span>monkeyflow</span>
             </div>
             <div className="ssMeta">
-              {formatDate(r.timestamp)} <span className="ssSep">|</span> {window.location.host}
+              {formatDate(r.timestamp)} <span className="ssSep">|</span> {publicHost()}
             </div>
           </div>
         ) : (

@@ -2,7 +2,7 @@ import { DEFAULT_CONFIG, type Config } from "../store/config";
 import type { TestResult } from "../store/test";
 import { dailyNumber, dailyQuote, LANGUAGES, QUOTE_GROUPS, QUOTES, type Language, type Quote, type QuoteLength } from "./words";
 import { emojiGrid } from "./daily";
-import { BASE } from "./base";
+import { BASE, publicRoot } from "./base";
 
 export const AVERAGE_TYPIST_WPM = 40;
 const TYPING_WPM_KEY = "monkeyflow-typing-wpm";
@@ -94,8 +94,9 @@ export function challengeFromResult(r: TestResult): Challenge | null {
   };
 }
 
-export function challengeUrl(c: Challenge | null, origin: string = window.location.origin): string {
-  if (!c) return `${origin}${BASE}`;
+export function challengeUrl(c: Challenge | null, origin?: string): string {
+  const root = origin === undefined ? publicRoot() : `${origin}${BASE}`;
+  if (!c) return root;
   const p = new URLSearchParams();
   if (c.kind === "quote") {
     p.set("q", String(c.quoteId));
@@ -110,7 +111,7 @@ export function challengeUrl(c: Challenge | null, origin: string = window.locati
   }
   if (c.wpm !== null) p.set("w", String(c.wpm));
   if (c.acc !== null) p.set("a", String(c.acc));
-  return `${origin}${BASE}?${p}`;
+  return `${root}?${p}`;
 }
 
 export const CHALLENGE_PARAMS = ["q", "dy", "m", "n", "s", "p", "d", "l", "w", "a"] as const;
