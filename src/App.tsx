@@ -49,6 +49,9 @@ export default function App() {
   const theme = useConfig((s) => s.theme);
 
   useEffect(() => applyTheme(theme), [theme]);
+  useEffect(() => {
+    document.body.classList.toggle("focus", focus);
+  }, [focus]);
   useFocusMode();
   useGlobalKeys();
 

@@ -23,7 +23,7 @@ export function Footer() {
 
   return (
     <footer id="footer">
-      <div className="keyTips">
+      <div className={`keyTips ${page === "test" ? "withVoiceHint" : ""}`}>
         <div>
           <kbd>tab &gt; enter</kbd>
           <span>- restart test</span>

@@ -62,7 +62,7 @@
   font-size: 2rem;
   line-height: 1em;
   height: 1.25em;
-  align-items: flex-end;
+  align-items: flex-start;
   color: var(--main-color);
   opacity: 0;
   pointer-events: none;
@@ -224,6 +224,7 @@
 /* ---------- voice controls ---------- */
 
 .testControls {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -232,9 +233,16 @@
 }
 
 .testButtons {
+  position: relative;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  width: max-content;
+  margin-inline: auto;
+}
+
+#micButton {
+  position: absolute;
+  right: 100%;
+  top: 0;
 }
 
 .testButtons .textButton {
@@ -251,8 +259,8 @@
 }
 
 #micButton {
-  position: relative;
   isolation: isolate;
+  transition: opacity 0.125s cubic-bezier(0.4, 0, 0.2, 1), color 0.125s;
 }
 #micButton.listening {
   color: var(--main-color);
@@ -298,9 +306,13 @@
 }
 
 .voiceHint {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
   max-width: 100%;
   padding: 0 1rem;
-  margin-top: 0.25rem;
   font-size: 0.75rem;
   line-height: 1rem;
   color: var(--sub-color);
@@ -312,7 +324,11 @@
 }
 
 .transcript {
-  margin-top: 0.5rem;
+  position: absolute;
+  top: calc(100% + 1.5rem);
+  left: 0;
+  right: 0;
+  margin-inline: auto;
   max-width: min(90%, 60ch);
   font-size: 0.75rem;
   line-height: 1rem;
@@ -335,6 +351,7 @@
 }
 
 #app.focus .voiceHint,
-#app.focus #restartTestButton {
+#app.focus #restartTestButton,
+#app.focus #micButton:not(.listening) {
   opacity: 0;
 }

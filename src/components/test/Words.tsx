@@ -1,6 +1,6 @@
 import { memo, useLayoutEffect, useRef, useState } from "react";
 import type { WordResult } from "../../lib/align";
-import { wordsMatch } from "../../lib/normalize";
+import { normalizeWord, similarity, wordsMatch } from "../../lib/normalize";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
 
@@ -21,14 +21,15 @@ const Word = memo(function Word({ text, result, active, lenient }: WordProps) {
     letters = [...text].map((ch) => ({ ch, cls: "" }));
   } else if (status === "correct") {
     letters = [...text].map((ch) => ({ ch, cls: "correct" }));
-  } else if (status === "incorrect") {
+  } else if (status === "incorrect" && similarity(normalizeWord(text), normalizeWord(result.input)) < 0.5) {
     letters = [...text].map((ch) => ({ ch, cls: "incorrect" }));
   } else if (status === "missed") {
     letters = [...text].map((ch) => ({ ch, cls: "" }));
-  } else if (lenient && wordsMatch(text, result.input, "lenient")) {
+  } else if (status === "partial" && lenient && wordsMatch(text, result.input, "lenient")) {
     letters = [...text].map((ch) => ({ ch, cls: "correct" }));
   } else {
-    const input = result.input;
+    // keyboard typos and near-miss recognitions: per-letter, like monkeytype
+    const input = lenient && status === "incorrect" ? result.input.replace(/[^\p{L}\p{N}']/gu, "") : result.input;
     const cmp = (a: string, b: string) => (lenient ? a.toLowerCase() === b.toLowerCase() : a === b);
     letters = [...text].map((ch, i) => ({
       ch,

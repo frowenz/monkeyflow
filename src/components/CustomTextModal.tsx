@@ -278,7 +278,7 @@ function CustomTextPanel({ closing }: { closing: boolean }) {
                   <input ref={fileRef} type="file" accept=".txt,text/plain" hidden onChange={onFile} />
                 </div>
                 <Section
-                  icon="fa-text-slash"
+                  icon="fa-remove-format"
                   title="remove zero-width characters"
                   desc="Fully remove zero-width characters."
                 >

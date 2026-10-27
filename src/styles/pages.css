@@ -1,0 +1,937 @@
+/* Settings, about, leaderboards and login pages. Measurements mirror monkeytype's
+ * Tailwind classes (gap-8 = 2rem, rounded = --roundness, rounded-xl = .75rem, ...). */
+
+/* ---------- shared ---------- */
+
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button {
+  min-height: 0;
+  line-height: 1.25;
+}
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button.active:hover {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 0.1rem var(--bg-color),
+    0 0 0 0.2rem var(--text-color);
+}
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button:disabled {
+  opacity: 0.33;
+  cursor: default;
+  pointer-events: none;
+}
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button.dim {
+  opacity: 0.33;
+}
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button.dim:hover {
+  opacity: 1;
+}
+/* a bare `monospace` family triggers Chrome's 13px monospace quirk and shrinks the chip */
+:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) kbd {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  line-height: 1.25;
+}
+
+/* ---------- settings ---------- */
+
+.pageSettings {
+  display: grid;
+  gap: 2rem;
+  align-content: start;
+}
+
+.pageSettings .groupJump {
+  display: flex;
+  justify-self: center;
+  width: max-content;
+  max-width: 100%;
+  border-radius: var(--roundness);
+  background: var(--sub-alt-color);
+  font-size: 0.75em;
+}
+.pageSettings .groupJump a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  padding: 1em;
+  border-radius: var(--roundness);
+  color: var(--sub-color);
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pageSettings .groupJump a:first-child {
+  padding-left: 2em;
+}
+.pageSettings .groupJump a:last-child {
+  padding-right: 2em;
+}
+.pageSettings .groupJump a:hover {
+  color: var(--text-color);
+}
+.pageSettings .groupJump a:active {
+  color: var(--sub-color);
+}
+.pageSettings .groupJump a:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 0.1rem var(--bg-color),
+    0 0 0 0.2rem var(--text-color);
+}
+
+.pageSettings .settingsTip {
+  color: var(--sub-color);
+  text-align: center;
+}
+
+.pageSettings .settingsNotice {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem;
+  border-radius: var(--roundness);
+  box-shadow: 0 0 0 4px var(--sub-alt-color);
+}
+.pageSettings .settingsNotice .noticeIcon {
+  width: 45px;
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  text-align: center;
+  color: var(--sub-color);
+}
+.pageSettings .settingsNotice .noticeButton {
+  padding: 1rem;
+}
+
+.pageSettings .settingsSearch {
+  position: relative;
+}
+.pageSettings .settingsSearch i {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  transform: translateY(-50%);
+  color: var(--sub-color);
+  pointer-events: none;
+}
+.pageSettings .settingsSearch input {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 2.5rem;
+  line-height: 1.25;
+}
+
+.pageSettings .settingsEmpty {
+  padding: 2rem 0 4rem;
+  color: var(--sub-color);
+  text-align: center;
+}
+
+.pageSettings .groupHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--roundness);
+  background: transparent;
+  color: var(--sub-color);
+  font-family: inherit;
+  font-size: 2.25rem;
+  line-height: 1.25;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pageSettings .groupHeader:hover {
+  color: var(--text-color);
+}
+.pageSettings .groupHeader:active {
+  color: var(--sub-color);
+}
+.pageSettings .groupHeader:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 0.1rem var(--bg-color),
+    0 0 0 0.2rem var(--text-color);
+}
+.pageSettings .groupHeader .chevron {
+  display: inline-grid;
+  place-items: center;
+  width: 0.875em;
+  transition: transform 0.25s ease;
+}
+/* FA6's chevron is 512 units wide; monkeytype's is 448, so squeeze it to match */
+.pageSettings .groupHeader .chevron i {
+  transform: scaleX(0.875);
+}
+.pageSettings .groupHeader.collapsed .chevron {
+  transform: rotate(-90deg);
+}
+
+.pageSettings .groupBody {
+  display: grid;
+  gap: 2rem;
+  padding-bottom: 6rem;
+}
+.pageSettings .groupBody.collapsed {
+  display: none;
+}
+
+.pageSettings .settingRow {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 0.5rem;
+  scroll-margin-top: 2rem;
+}
+.pageSettings .settingRow::before {
+  content: "";
+  position: absolute;
+  inset: -1rem;
+  z-index: -1;
+  border-radius: calc(var(--roundness) * 2);
+  background: var(--sub-alt-color);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease-out;
+}
+.pageSettings .settingRow.highlight::before {
+  opacity: 1;
+  transition-duration: 0.15s;
+}
+.pageSettings .settingRow .titleRow {
+  display: flex;
+  gap: 0.5rem;
+}
+.pageSettings .settingRow h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  font-size: 1em;
+  line-height: 1.25;
+  color: var(--sub-color);
+}
+.pageSettings .settingRow .linkButton {
+  margin: -0.5rem;
+  padding: 0.5rem;
+  opacity: 0;
+}
+.pageSettings .settingRow:hover .linkButton,
+.pageSettings .settingRow .linkButton:focus-visible {
+  opacity: 1;
+}
+.pageSettings .settingBody {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  column-gap: 2rem;
+  row-gap: 0.5rem;
+}
+.pageSettings .settingRow.wide .settingBody {
+  grid-template-columns: 1fr;
+}
+.pageSettings .settingRow .note {
+  color: var(--error-color);
+}
+
+.pageSettings .optionButtons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  gap: 0.5rem;
+}
+.pageSettings .optionButtons.cols2 {
+  grid-template-columns: 1fr 1fr;
+}
+.pageSettings .settingRow.wide .optionButtons {
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+}
+.pageSettings .optionButtons .button,
+.pageSettings .wideButton {
+  width: 100%;
+}
+.pageSettings .button.danger {
+  background: var(--error-color);
+  color: var(--bg-color);
+}
+.pageSettings .button.danger:hover {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+.pageSettings .button.danger:active {
+  background: var(--sub-color);
+}
+
+/* theme picker */
+
+.pageSettings .themePicker {
+  display: grid;
+  gap: 1rem;
+}
+.pageSettings .themeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.5rem;
+}
+.pageSettings .themeButton {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-width: 0;
+  padding: 4px;
+  border: none;
+  border-radius: var(--roundness);
+  background: var(--theme-bg);
+  color: var(--theme-main);
+  font-family: inherit;
+  font-size: 1em;
+  line-height: 1.25;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px transparent;
+  transition:
+    opacity 0.125s,
+    color 0.125s,
+    background 0.125s,
+    box-shadow 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.pageSettings .themeButton:hover,
+.pageSettings .themeButton.active,
+.pageSettings .themeButton:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--theme-main);
+}
+.pageSettings .themeFav {
+  display: grid;
+  place-items: center;
+  justify-self: start;
+  padding: 4px;
+  border-radius: 9999px;
+  background: var(--theme-bg);
+  opacity: 0;
+  transition:
+    opacity 0.125s,
+    color 0.125s;
+}
+.pageSettings .themeButton:hover .themeFav,
+.pageSettings .themeFav.on {
+  opacity: 1;
+}
+.pageSettings .themeFav:hover {
+  color: var(--theme-text);
+}
+.pageSettings .themeFav i {
+  line-height: 1.25;
+}
+.pageSettings .themeName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pageSettings .themeBubbles {
+  justify-self: end;
+  width: calc(3em + 1rem);
+  height: calc(1em + 0.5rem);
+  margin-right: 4px;
+  border-radius: 9999px;
+  background-color: var(--theme-bg);
+  background-image:
+    radial-gradient(circle closest-side, var(--theme-main) 97%, transparent),
+    radial-gradient(circle closest-side, var(--theme-sub) 97%, transparent),
+    radial-gradient(circle closest-side, var(--theme-text) 97%, transparent);
+  background-position: 0.25rem, calc(0.5rem + 1em), calc(0.75rem + 2em);
+  background-repeat: no-repeat;
+  background-size: 1em 1em;
+  opacity: 0;
+  transition: opacity 0.125s;
+}
+.pageSettings .themeButton:hover .themeBubbles,
+.pageSettings .themeButton.active .themeBubbles {
+  opacity: 1;
+}
+
+@media only screen and (width < 80rem) {
+  .pageSettings .settingBody {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+@media only screen and (width < 64rem) {
+  .pageSettings .groupJump {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(12rem, 40%), 1fr));
+    width: 100%;
+  }
+  .pageSettings .groupJump a:first-child,
+  .pageSettings .groupJump a:last-child {
+    padding: 1em;
+  }
+}
+@media only screen and (width < 48rem) {
+  .pageSettings .settingBody {
+    grid-template-columns: 1fr;
+  }
+  .pageSettings .settingsNotice {
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+  }
+  .pageSettings .settingsNotice .noticeButton {
+    grid-column: span 2;
+  }
+  .pageSettings .groupHeader {
+    font-size: 1.75rem;
+  }
+}
+
+/* ---------- about ---------- */
+
+.pageAbout {
+  display: grid;
+  gap: 2rem;
+  align-content: start;
+  padding-inline: 2rem;
+}
+.pageAbout section {
+  min-width: 0;
+}
+.pageAbout p {
+  margin: 0;
+}
+.pageAbout .aboutIntro {
+  color: var(--sub-color);
+  text-align: center;
+}
+.pageAbout .aboutIntro a {
+  color: inherit;
+  transition: color 0.125s;
+}
+.pageAbout .aboutIntro a:hover {
+  color: var(--text-color);
+}
+
+.pageAbout .aboutStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  text-align: center;
+}
+.pageAbout .aboutStats .label {
+  color: var(--sub-color);
+}
+.pageAbout .aboutStats .value {
+  font-size: 3rem;
+  line-height: 1;
+}
+.pageAbout .aboutStats .unit {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+.pageAbout .aboutChart {
+  height: 12rem;
+}
+.pageAbout .aboutChart .chartBox {
+  height: 100%;
+}
+.pageAbout .aboutChart svg {
+  display: block;
+  overflow: visible;
+  font-family: var(--font);
+}
+.pageAbout .aboutChart .bar {
+  fill: var(--main-color);
+  transition: fill 0.125s;
+}
+.pageAbout .aboutChart .bar:hover {
+  fill: var(--text-color);
+}
+.pageAbout .aboutChart .grid line {
+  stroke: var(--sub-alt-color);
+  stroke-width: 1;
+}
+.pageAbout .aboutChart text {
+  fill: var(--sub-color);
+  font-size: 12px;
+}
+.pageAbout .aboutChart .chartLabel {
+  color: var(--sub-color);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-align: right;
+}
+
+.pageAbout h2,
+.pageAbout h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  padding-bottom: 0.5em;
+  color: var(--sub-color);
+  line-height: 1.25;
+}
+.pageAbout h2 {
+  font-size: 2.25em;
+}
+.pageAbout h3 {
+  font-size: 1em;
+}
+
+.pageAbout dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  margin: 0;
+}
+.pageAbout dt {
+  grid-column: 1;
+  margin-right: 1rem;
+}
+.pageAbout dd {
+  grid-column: 2;
+  margin: 0;
+}
+
+.pageAbout .aboutTips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pageAbout .aboutTips li::before {
+  content: "- ";
+  color: var(--sub-color);
+}
+
+.pageAbout .bigButtons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 1.25rem;
+}
+.pageAbout .bigButtons.single {
+  grid-template-columns: 1fr;
+}
+.pageAbout .bigButtons .button {
+  padding: 2rem;
+  font-size: 1em;
+}
+
+.pageAbout .credits a.textButton {
+  padding: 0.5rem 0.5rem 0.5rem 0;
+}
+.pageAbout .credits a.textButton:hover {
+  color: var(--text-color);
+}
+
+@media only screen and (width < 64rem) {
+  .pageAbout .bigButtons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .pageAbout .bigButtons.single {
+    grid-template-columns: 1fr;
+  }
+}
+@media only screen and (width < 40rem) {
+  .pageAbout .aboutStats,
+  .pageAbout .bigButtons {
+    grid-template-columns: 1fr;
+  }
+  .pageAbout dl {
+    grid-template-columns: 1fr;
+  }
+  .pageAbout dt,
+  .pageAbout dd {
+    grid-column: 1;
+  }
+  .pageAbout dd {
+    margin-bottom: 0.5rem;
+    color: var(--sub-color);
+  }
+}
+@media only screen and (width <= calc(640px + 5rem)) {
+  .pageAbout {
+    padding-inline: 1rem;
+  }
+}
+
+/* ---------- leaderboards ---------- */
+
+.pageLeaderboards {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.pageLeaderboards .lbSide {
+  flex-shrink: 0;
+  width: 18.75rem;
+}
+.pageLeaderboards .lbPanel {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--sub-alt-color);
+}
+.pageLeaderboards .lbPanel .button {
+  justify-content: flex-start;
+  padding: 0.5rem 0.75rem;
+}
+
+.pageLeaderboards .lbMain {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2rem;
+  min-width: 0;
+}
+.pageLeaderboards .lbTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  color: var(--text-color);
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+.pageLeaderboards .lbDivider {
+  height: 4px;
+  border-radius: var(--roundness);
+  background: var(--sub-alt-color);
+}
+.pageLeaderboards .lbTopRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+.pageLeaderboards .lbTopRow .info {
+  color: var(--sub-color);
+}
+.pageLeaderboards .lbPager {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.pageLeaderboards .lbPager .button {
+  padding: 0.5rem 1rem;
+}
+
+.pageLeaderboards .lbTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.pageLeaderboards .lbTable th {
+  padding: 0.5rem 1.5rem;
+  color: var(--sub-color);
+  font-weight: 400;
+  line-height: 1.333;
+  text-align: right;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.pageLeaderboards .lbTable td {
+  padding: 0.75rem 1.5rem;
+  line-height: 1.5;
+  text-align: right;
+  white-space: nowrap;
+}
+.pageLeaderboards .lbTable tbody tr:nth-child(odd) td {
+  background: var(--sub-alt-color);
+}
+.pageLeaderboards .lbTable td:first-child {
+  border-radius: var(--roundness) 0 0 var(--roundness);
+}
+.pageLeaderboards .lbTable td:last-child {
+  border-radius: 0 var(--roundness) var(--roundness) 0;
+}
+.pageLeaderboards .lbTable .rank {
+  text-align: center;
+}
+.pageLeaderboards .lbTable .name {
+  width: 100%;
+  text-align: left;
+}
+.pageLeaderboards .lbTable .twoLine {
+  font-size: 0.875em;
+  line-height: 1.25rem;
+}
+.pageLeaderboards .lbTable .stacked .second,
+.pageLeaderboards .lbTable .twoLine .second {
+  color: var(--sub-color);
+}
+.pageLeaderboards .lbTable th .second {
+  font-size: 0.75em;
+  opacity: 0.5;
+}
+.pageLeaderboards .lbTable .colStacked {
+  display: none;
+}
+
+.pageLeaderboards .lbUser {
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: 0.5em;
+  width: min-content;
+}
+.pageLeaderboards .lbUser .avatar {
+  width: 1.25em;
+  color: var(--sub-color);
+  font-size: 1.25em;
+  text-align: center;
+}
+.pageLeaderboards .lbBadge {
+  padding: 0.25em 0.5em;
+  border-radius: 0.5em;
+  color: #fff;
+  font-size: 0.75em;
+  line-height: 1.333;
+  white-space: nowrap;
+  animation: mfRgbBg 10s linear infinite;
+}
+.pageLeaderboards .lbBadge span {
+  padding-left: 0.75em;
+}
+@keyframes mfRgbBg {
+  0% {
+    background: #4cae4c;
+  }
+  20% {
+    background: #409eb5;
+  }
+  40% {
+    background: #8134f4;
+  }
+  60% {
+    background: #f10e19;
+  }
+  80% {
+    background: #ffc505;
+  }
+  100% {
+    background: #4cae4c;
+  }
+}
+
+.pageLeaderboards .lbEmpty {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+  padding: 5rem 1rem;
+  border-radius: var(--roundness);
+  background: var(--sub-alt-color);
+  color: var(--sub-color);
+  text-align: center;
+}
+.pageLeaderboards .lbEmpty .emptyIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+.pageLeaderboards .lbEmpty .emptyText {
+  color: var(--text-color);
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.pageLeaderboards .lbEmpty .button {
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-color);
+}
+.pageLeaderboards .lbEmpty .button:hover {
+  background: var(--text-color);
+}
+
+.pageLeaderboards .lbMain {
+  container-type: inline-size;
+}
+.pageLeaderboards .lbTableWrap {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* the table collapses by the width it actually gets, not the viewport */
+@container (width < 1100px) {
+  .pageLeaderboards .lbTable .colWide {
+    display: none;
+  }
+  .pageLeaderboards .lbTable .colStacked {
+    display: table-cell;
+  }
+  .pageLeaderboards .lbTable th,
+  .pageLeaderboards .lbTable td {
+    padding-inline: 1rem;
+  }
+}
+@container (width < 900px) {
+  .pageLeaderboards .lbTitle {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+@container (width < 760px) {
+  .pageLeaderboards .lbTable .colTest {
+    display: none;
+  }
+}
+@container (width < 560px) {
+  .pageLeaderboards .lbTable .colRaw {
+    display: none;
+  }
+  .pageLeaderboards .lbTable th,
+  .pageLeaderboards .lbTable td {
+    padding-inline: 0.5rem;
+  }
+  .pageLeaderboards .lbTitle {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  .pageLeaderboards .lbTopRow {
+    grid-template-columns: 1fr;
+  }
+  .pageLeaderboards .lbPager {
+    justify-self: end;
+  }
+}
+@container (width < 400px) {
+  .pageLeaderboards .lbTable {
+    font-size: 0.8em;
+  }
+  .pageLeaderboards .lbBadge span {
+    display: none;
+  }
+}
+
+@media only screen and (width < 96rem) {
+  .pageLeaderboards .lbSide {
+    width: 15rem;
+  }
+}
+@media only screen and (width < 64rem) {
+  .pageLeaderboards {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .pageLeaderboards .lbSide {
+    width: 100%;
+  }
+  .pageLeaderboards .lbPanel {
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  }
+}
+
+/* ---------- login ---------- */
+
+.pageLogin {
+  display: flex;
+}
+.pageLogin .loginWrap {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-around;
+  gap: 1rem;
+}
+.pageLogin .loginColumn {
+  display: grid;
+  gap: 0.5rem;
+  width: 20rem;
+}
+.pageLogin h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  color: var(--sub-color);
+  font-size: 1em;
+  line-height: 1.25;
+}
+.pageLogin form {
+  display: grid;
+  gap: 0.5rem;
+}
+.pageLogin input.input {
+  display: block;
+  width: 100%;
+  padding: 0.5em;
+  line-height: 1.25em;
+}
+.pageLogin .button {
+  width: 100%;
+}
+.pageLogin .oauth {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.pageLogin .orRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.pageLogin .orRow .line {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--roundness);
+  background: var(--sub-alt-color);
+}
+.pageLogin .checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: max-content;
+  cursor: pointer;
+  user-select: none;
+}
+.pageLogin .checkbox input {
+  display: none;
+}
+.pageLogin .checkbox .box {
+  display: grid;
+  place-items: center;
+  width: 1.25em;
+  height: 1.25em;
+  flex-shrink: 0;
+  border-radius: calc(var(--roundness) / 2);
+  background: var(--sub-alt-color);
+}
+.pageLogin .checkbox .box i {
+  color: transparent;
+  transition: color 0.125s;
+}
+.pageLogin .checkbox input:checked + .box i {
+  color: var(--main-color);
+}
+.pageLogin .checkbox:hover input:checked + .box i {
+  color: var(--text-color);
+}
+.pageLogin .checkbox:hover .box i {
+  color: var(--sub-color);
+}
+.pageLogin .forgot {
+  justify-self: end;
+  padding: 0.5em;
+  font-size: 0.75em;
+}
+
+@media only screen and (width < 48rem) {
+  .pageLogin .loginWrap {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3rem;
+  }
+}
+@media only screen and (width < 40rem) {
+  .pageLogin .loginColumn {
+    width: 100%;
+  }
+}

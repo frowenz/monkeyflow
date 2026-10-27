@@ -44,7 +44,7 @@ export const DEFAULT_CONFIG: Config = {
   strictness: "lenient",
   smoothCaret: true,
   smoothLineScroll: true,
-  liveSpeed: "mini",
+  liveSpeed: "off",
   liveAcc: "off",
   timerStyle: "mini",
   showTranscript: true,
