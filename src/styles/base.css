@@ -14,7 +14,7 @@
   --balloon-border-radius: calc(var(--roundness) / 2);
   --balloon-color: #101010f2;
   --balloon-text-color: #fff;
-  --balloon-font-size: 12px;
+  --balloon-font-size: 1rem;
   --balloon-move: 4px;
 }
 

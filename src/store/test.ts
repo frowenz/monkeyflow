@@ -36,7 +36,8 @@ export interface TestResult {
   numbers: boolean;
   language: string;
   engine: Engine;
-  chart: { wpm: number[]; raw: number[]; err: number[]; labels: number[] };
+  /** wpm and raw are cumulative averages; burst is smoothed per-second raw (monkeytype's "burst"). */
+  chart: { wpm: number[]; raw: number[]; burst: number[]; err: number[]; labels: number[] };
   words: HistoryWord[];
   extras: Extra[];
   quote: Quote | null;
@@ -338,14 +339,15 @@ export const useTest = create<TestState>((set, get) => {
         const prevT = i === 0 ? 0 : labels[i - 1];
         return wpmFromChars(sn.raw - prev, Math.max(0.2, labels[i] - prevT));
       });
-      const rawLine = smooth(rawPerSecond, 3);
+      const burstLine = smooth(rawPerSecond, 3);
+      const rawLine = snaps.map((sn, i) => wpmFromChars(sn.raw, labels[i]));
       const errLine = snaps.map((sn, i) => Math.max(0, sn.errors - (i === 0 ? 0 : snaps[i - 1].errors)));
 
       const chars = countChars(s.targets, s.alignment);
       const wpm = wpmFromChars(finalSnap.correct, time);
       const raw = wpmFromChars(finalSnap.raw, time);
       const acc = accuracy(chars);
-      const cons = consistency(rawLine);
+      const cons = consistency(burstLine);
 
       const historyCount =
         c.mode === "time" ? Math.max(s.alignment.words.length, s.alignment.caretWord) : s.targets.length;
@@ -383,7 +385,7 @@ export const useTest = create<TestState>((set, get) => {
         consistency: cons,
         time,
         chars,
-        chart: { wpm: wpmLine, raw: rawLine, err: errLine, labels },
+        chart: { wpm: wpmLine, raw: rawLine, burst: burstLine, err: errLine, labels },
         words,
         extras: s.alignment.extras,
         quote: s.quote,
@@ -396,7 +398,7 @@ export const useTest = create<TestState>((set, get) => {
       if (!invalid) {
         const all = savedResults();
         all.unshift(result);
-        localStorage.setItem("monkeyflow-results", JSON.stringify(all.slice(0, 50).map((r) => ({ ...r, words: [], chart: { wpm: [], raw: [], err: [], labels: [] } }))));
+        localStorage.setItem("monkeyflow-results", JSON.stringify(all.slice(0, 50).map((r) => ({ ...r, words: [], chart: { wpm: [], raw: [], burst: [], err: [], labels: [] } }))));
       }
 
       set({ status: "finished", elapsed: time, snapshots: snaps, result });
