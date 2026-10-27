@@ -29,18 +29,36 @@ export const QUOTE_GROUPS: Record<Exclude<QuoteLength, "all">, [number, number]>
   thicc: [601, 9999],
 };
 
-function pick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+export type Rng = () => number;
+
+/** Small deterministic PRNG so a test can be replayed from its seed (challenge links). */
+export function mulberry32(seed: number): Rng {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+export function randomSeed(): number {
+  return Math.floor(Math.random() * 2 ** 31);
+}
+
+function pick<T>(arr: T[], rng: Rng = Math.random): T {
+  return arr[Math.floor(rng() * arr.length)];
 }
 
 function capitalize(w: string): string {
   return w.charAt(0).toUpperCase() + w.slice(1);
 }
 
-function randomNumberWord(): string {
-  const len = 1 + Math.floor(Math.random() * 4);
-  let s = String(1 + Math.floor(Math.random() * 9));
-  for (let i = 1; i < len; i++) s += String(Math.floor(Math.random() * 10));
+function randomNumberWord(rng: Rng): string {
+  const len = 1 + Math.floor(rng() * 4);
+  let s = String(1 + Math.floor(rng() * 9));
+  for (let i = 1; i < len; i++) s += String(Math.floor(rng() * 10));
   return s;
 }
 
@@ -54,21 +72,23 @@ export class WordGenerator {
   private prev: string[] = [];
   private sentenceStart = true;
   private opts: WordGenOptions;
+  private rng: Rng;
 
-  constructor(opts: WordGenOptions) {
+  constructor(opts: WordGenOptions, rng: Rng = Math.random) {
     this.opts = opts;
+    this.rng = rng;
   }
 
   next(): string {
     const list = LISTS[this.opts.language];
-    let word = pick(list);
+    let word = pick(list, this.rng);
     let guard = 0;
-    while (this.prev.includes(word) && guard++ < 20) word = pick(list);
+    while (this.prev.includes(word) && guard++ < 20) word = pick(list, this.rng);
     this.prev.push(word);
     if (this.prev.length > 2) this.prev.shift();
 
-    if (this.opts.numbers && Math.random() < 0.1) {
-      word = randomNumberWord();
+    if (this.opts.numbers && this.rng() < 0.1) {
+      word = randomNumberWord(this.rng);
     }
     if (this.opts.punctuation) word = this.punctuate(word);
     return word;
@@ -90,12 +110,12 @@ export class WordGenerator {
       w = capitalize(w);
       this.sentenceStart = false;
     }
-    const r = Math.random();
+    const r = this.rng();
     if (r < 0.1) {
-      w += pick([".", ".", ".", "?", "!"]);
+      w += pick([".", ".", ".", "?", "!"], this.rng);
       this.sentenceStart = true;
     } else if (r < 0.2) {
-      w += pick([",", ",", ",", ";", ":"]);
+      w += pick([",", ",", ",", ";", ":"], this.rng);
     } else if (r < 0.23) {
       w = `"${w}"`;
     } else if (r < 0.25) {

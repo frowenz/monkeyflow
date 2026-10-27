@@ -12,7 +12,7 @@ import {
   type CharCounts,
 } from "../lib/stats";
 import { wordsMatch } from "../lib/normalize";
-import { QUOTES, randomQuote, splitText, WordGenerator, type Quote } from "../lib/words";
+import { mulberry32, QUOTES, randomQuote, randomSeed, splitText, WordGenerator, type Quote } from "../lib/words";
 import { getConfig, type Engine, type Mode } from "./config";
 
 export type TestStatus = "idle" | "active" | "finished";
@@ -41,6 +41,8 @@ export interface TestResult {
   words: HistoryWord[];
   extras: Extra[];
   quote: Quote | null;
+  /** Seed that regenerates the same words (time/words modes) for challenge links. */
+  seed: number;
   isPb: boolean;
   previousPb: number | null;
   invalid: string | null;
@@ -58,6 +60,7 @@ interface TestState {
   testId: number;
   targets: string[];
   quote: Quote | null;
+  seed: number;
   /** Textarea contents: keyboard typing and text pasted by dictation apps like Wispr Flow. */
   inputText: string;
   /** Committed built-in speech recognition text. */
@@ -80,7 +83,7 @@ interface TestState {
   usedDictation: boolean;
 
   /** `quoteId` forces a specific quote (caller should switch mode to "quote" first). */
-  newTest: (opts?: { repeat?: boolean; quoteId?: number }) => void;
+  newTest: (opts?: { repeat?: boolean; quoteId?: number; seed?: number }) => void;
   setInput: (text: string, dictated?: boolean) => void;
   commitSpeech: (text: string) => void;
   clearSpeech: () => void;
@@ -110,9 +113,9 @@ function modeTwo(): string {
   }
 }
 
-function buildTargets(prevQuote: Quote | null): { targets: string[]; quote: Quote | null } {
+function buildTargets(prevQuote: Quote | null, seed: number): { targets: string[]; quote: Quote | null } {
   const c = getConfig();
-  generator = new WordGenerator({ language: c.language, punctuation: c.punctuation, numbers: c.numbers });
+  generator = new WordGenerator({ language: c.language, punctuation: c.punctuation, numbers: c.numbers }, mulberry32(seed));
   switch (c.mode) {
     case "time":
       return { targets: generator.take(80), quote: null };
@@ -269,6 +272,7 @@ export const useTest = create<TestState>((set, get) => {
     testId: 0,
     targets: [],
     quote: null,
+    seed: 0,
     inputText: "",
     speechText: "",
     interimText: "",
@@ -290,6 +294,7 @@ export const useTest = create<TestState>((set, get) => {
       const prev = get();
       let targets: string[];
       let quote: Quote | null;
+      let seed = opts?.seed ?? (opts?.repeat && prev.seed ? prev.seed : randomSeed());
       const forced = opts?.quoteId !== undefined ? QUOTES.find((q) => q.id === opts.quoteId) : undefined;
       if (forced) {
         targets = splitText(forced.text);
@@ -297,14 +302,16 @@ export const useTest = create<TestState>((set, get) => {
       } else if (opts?.repeat && prev.targets.length && getConfig().mode !== "time" && getConfig().mode !== "zen") {
         targets = prev.result ? prev.result.words.map((w) => w.target) : prev.targets;
         quote = prev.quote;
+        seed = prev.seed;
       } else {
-        ({ targets, quote } = buildTargets(prev.quote));
+        ({ targets, quote } = buildTargets(prev.quote, seed));
       }
       set({
         status: "idle",
         testId: prev.testId + 1,
         targets,
         quote,
+        seed,
         inputText: "",
         speechText: "",
         interimText: "",
@@ -441,6 +448,7 @@ export const useTest = create<TestState>((set, get) => {
         words,
         extras: s.alignment.extras,
         quote: s.quote,
+        seed: s.seed,
         isPb,
         previousPb,
         invalid,
