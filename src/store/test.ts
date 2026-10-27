@@ -256,6 +256,20 @@ export const useTest = create<TestState>((set, get) => {
     }
   };
 
+  // Recognizers can fire several updates per frame; align at most once per frame on the latest input.
+  let recomputeScheduled = false;
+  const scheduleRecompute = () => {
+    if (recomputeScheduled) return;
+    recomputeScheduled = true;
+    const run = () => {
+      recomputeScheduled = false;
+      const s = get();
+      recompute(s.inputText, s.speechText, s.interimText);
+    };
+    if (typeof document !== "undefined" && document.hidden) setTimeout(run, 16);
+    else requestAnimationFrame(run);
+  };
+
   const snapshot = (): Snapshot => {
     const s = get();
     return {
@@ -351,9 +365,8 @@ export const useTest = create<TestState>((set, get) => {
     },
 
     setInput: (text, dictated) => {
-      if (dictated) set({ usedDictation: true });
-      const s = get();
-      recompute(text, s.speechText, s.interimText);
+      set(dictated ? { inputText: text, usedDictation: true } : { inputText: text });
+      scheduleRecompute();
     },
 
     commitSpeech: (text) => {
@@ -361,14 +374,13 @@ export const useTest = create<TestState>((set, get) => {
       if (s.status === "finished") return;
       const base = s.speechText;
       const sep = base.length === 0 ? "" : " ";
-      set({ usedSpeech: true });
-      recompute(s.inputText, `${base}${sep}${text.trim()}`, "");
+      set({ usedSpeech: true, speechText: `${base}${sep}${text.trim()}`, interimText: "" });
+      scheduleRecompute();
     },
 
     clearSpeech: () => {
-      const s = get();
-      set({ usedSpeech: false });
-      if (s.speechText || s.interimText) recompute(s.inputText, "", "");
+      set({ usedSpeech: false, speechText: "", interimText: "" });
+      scheduleRecompute();
     },
 
     setDictation: (on) => set({ dictation: on }),
@@ -378,8 +390,8 @@ export const useTest = create<TestState>((set, get) => {
     setInterim: (text) => {
       const s = get();
       if (s.status === "finished" || text === s.interimText) return;
-      if (text) set({ usedSpeech: true });
-      recompute(s.inputText, s.speechText, text);
+      set(text ? { usedSpeech: true, interimText: text } : { interimText: text });
+      scheduleRecompute();
     },
 
     noteVoiceStart: (at) => {
