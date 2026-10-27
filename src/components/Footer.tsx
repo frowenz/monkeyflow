@@ -1,0 +1,83 @@
+import { useConfig } from "../store/config";
+import { useUi } from "../store/ui";
+
+const LINKS: { icon: string; label: string; href?: string }[] = [
+  { icon: "fas fa-envelope", label: "contact" },
+  { icon: "fas fa-donate", label: "support" },
+  { icon: "fas fa-code", label: "github", href: "https://github.com/monkeytypegame/monkeytype" },
+  { icon: "fab fa-discord", label: "discord" },
+  { icon: "fab fa-twitter", label: "twitter", href: "https://x.com/WisprFlow" },
+  { icon: "fas fa-file-contract", label: "terms" },
+  { icon: "fas fa-shield-alt", label: "security" },
+  { icon: "fas fa-lock", label: "privacy" },
+];
+
+export const VERSION = "v1.0.0";
+
+export function Footer() {
+  const theme = useConfig((s) => s.theme);
+  const page = useUi((s) => s.page);
+
+  return (
+    <footer id="footer">
+      <div className="keyTips">
+        <div>
+          <kbd>tab</kbd> + <kbd>enter</kbd>
+          <span>- restart test</span>
+        </div>
+        {page === "test" && (
+          <div>
+            <kbd>enter</kbd>
+            <span>- start / stop listening</span>
+          </div>
+        )}
+        <div>
+          <kbd>escape</kbd>&nbsp;or&nbsp;<kbd>ctrl + shift + p</kbd>
+          <span>- command line</span>
+        </div>
+      </div>
+      <div className="footerBottom">
+        <div className="footerLinks">
+          {LINKS.map((l) =>
+            l.href ? (
+              <a key={l.label} className="textButton" href={l.href} target="_blank" rel="noreferrer noopener">
+                <i className={`${l.icon} fa-fw`} />
+                {l.label}
+              </a>
+            ) : (
+              <button
+                key={l.label}
+                type="button"
+                className="textButton"
+                onClick={() => useUi.getState().setPage("about")}
+              >
+                <i className={`${l.icon} fa-fw`} />
+                {l.label}
+              </button>
+            ),
+          )}
+        </div>
+        <div className="footerRight">
+          <button
+            type="button"
+            className="textButton"
+            aria-label="Click to change theme"
+            data-balloon-pos="left"
+            onClick={() => useUi.getState().openCommandLine("themes")}
+          >
+            <i className="fas fa-palette fa-fw" />
+            <div className="text">{theme}</div>
+          </button>
+          <button
+            type="button"
+            className="textButton"
+            onClick={() => useUi.getState().setPage("about")}
+          >
+            <i className="fas fa-code-branch fa-fw" />
+            <div className="text">{VERSION}</div>
+          </button>
+        </div>
+      </div>
+    </footer>
+  );
+}
