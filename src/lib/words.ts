@@ -2,6 +2,11 @@ import english from "../data/english.json";
 import english1k from "../data/english_1k.json";
 import quotesData from "../data/quotes.json";
 import twistersData from "../data/tongue_twisters.json";
+import spanish from "../data/languages/spanish.json";
+import french from "../data/languages/french.json";
+import german from "../data/languages/german.json";
+import portuguese from "../data/languages/portuguese.json";
+import italian from "../data/languages/italian.json";
 
 export interface Quote {
   id: number;
@@ -11,14 +16,46 @@ export interface Quote {
 }
 
 export type QuoteLength = "all" | "short" | "medium" | "long" | "thicc";
-export type Language = "english" | "english_1k" | "tongue_twisters";
+export type Language =
+  | "english"
+  | "english_1k"
+  | "tongue_twisters"
+  | "spanish"
+  | "french"
+  | "german"
+  | "portuguese"
+  | "italian";
+
+export const LANGUAGES: Language[] = [
+  "english",
+  "english_1k",
+  "tongue_twisters",
+  "spanish",
+  "french",
+  "german",
+  "portuguese",
+  "italian",
+];
 
 const TWISTERS: string[] = (twistersData as { twisters: string[] }).twisters;
 
-const LISTS: Record<Exclude<Language, "tongue_twisters">, string[]> = {
-  english: (english as { words: string[] }).words,
-  english_1k: (english1k as { words: string[] }).words,
+type WordList = { words: string[]; speech?: string };
+
+const LISTS: Record<Exclude<Language, "tongue_twisters">, WordList> = {
+  english: english as WordList,
+  english_1k: english1k as WordList,
+  spanish: spanish as WordList,
+  french: french as WordList,
+  german: german as WordList,
+  portuguese: portuguese as WordList,
+  italian: italian as WordList,
 };
+
+/** Recognizer language for a word set; English sets use the user's chosen accent. */
+export function speechLangFor(language: Language, englishAccent: string): string {
+  if (language === "tongue_twisters") return englishAccent;
+  return LISTS[language].speech ?? englishAccent;
+}
 
 export const QUOTES: Quote[] = (quotesData as Quote[]).map((q) => ({
   ...q,
@@ -87,7 +124,7 @@ export class WordGenerator {
 
   next(): string {
     if (this.opts.language === "tongue_twisters") return this.nextTwisterWord();
-    const list = LISTS[this.opts.language];
+    const list = LISTS[this.opts.language].words;
     let word = pick(list, this.rng);
     let guard = 0;
     while (this.prev.includes(word) && guard++ < 20) word = pick(list, this.rng);

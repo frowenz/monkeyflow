@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { MicMonitor } from "../lib/mic";
 import { normalizeWord } from "../lib/normalize";
+import { speechLangFor } from "../lib/words";
 import { isSpeechSupported, Recognizer, type RecognizerEvents, type RecognizerState } from "../lib/speech";
 import { getConfig, useConfig } from "./config";
 import { useTest } from "./test";
@@ -101,7 +102,7 @@ const mic = new MicMonitor({
 });
 
 export async function startListening(): Promise<void> {
-  const { engine, speechLang } = getConfig();
+  const { engine, speechLang, language } = getConfig();
   const builtin = engine === "builtin" && isSpeechSupported();
   if (engine === "builtin" && !builtin) {
     notify(
@@ -113,7 +114,7 @@ export async function startListening(): Promise<void> {
   useVoice.setState({ listening: true, blocked: false, everUsed: true });
   localStorage.setItem("monkeyflow-mic-used", "1");
   if (builtin) {
-    recognizer.lang = speechLang;
+    recognizer.lang = speechLangFor(language, speechLang);
     recognizer.start();
   }
   try {
@@ -298,11 +299,12 @@ useTest.subscribe((state) => {
 });
 
 let lastEngine = getConfig().engine;
-let lastLang = getConfig().speechLang;
+let lastLang = speechLangFor(getConfig().language, getConfig().speechLang);
 useConfig.subscribe((c) => {
-  if (c.engine === lastEngine && c.speechLang === lastLang) return;
+  const lang = speechLangFor(c.language, c.speechLang);
+  if (c.engine === lastEngine && lang === lastLang) return;
   lastEngine = c.engine;
-  lastLang = c.speechLang;
+  lastLang = lang;
   if (useVoice.getState().listening) {
     stopListening();
     void startListening();

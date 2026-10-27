@@ -246,6 +246,11 @@ const languageGroup = (): CommandGroup =>
       { value: "english" as Language, display: "english" },
       { value: "english_1k" as Language, display: "english 1k" },
       { value: "tongue_twisters" as Language, display: "tongue twisters", alias: "twister peter piper seashells" },
+      { value: "spanish" as Language, display: "spanish", alias: "espanol" },
+      { value: "french" as Language, display: "french", alias: "francais" },
+      { value: "german" as Language, display: "german", alias: "deutsch" },
+      { value: "portuguese" as Language, display: "portuguese", alias: "portugues brasil" },
+      { value: "italian" as Language, display: "italian", alias: "italiano" },
     ],
     { restart: true },
   );
