@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
 import { useUi } from "../../store/ui";
-import { onDictationDetected } from "../../store/voice";
+import { isTouchDevice } from "../../lib/device";
+import { onDictationDetected, useVoice } from "../../store/voice";
 import { ResultPage } from "../result/ResultPage";
 import { TestConfig } from "../TestConfig";
 import { LiveStats } from "./LiveStats";
@@ -34,21 +35,23 @@ function TestView() {
   const status = useTest((s) => s.status);
   const testId = useTest((s) => s.testId);
   const modalOpen = useUi((s) => s.commandLineOpen || s.customTextOpen);
+  const listening = useVoice((s) => s.listening);
   const [focused, setFocused] = useState(true);
   const [blurred, setBlurred] = useState(false);
+  const touch = isTouchDevice();
 
   useEffect(() => {
-    if (!modalOpen) inputRef.current?.focus();
-  }, [modalOpen, testId]);
+    if (!modalOpen && !touch) inputRef.current?.focus();
+  }, [modalOpen, testId, touch]);
 
   useEffect(() => {
-    if (focused || modalOpen) {
+    if (focused || modalOpen || listening || touch) {
       setBlurred(false);
       return;
     }
     const id = window.setTimeout(() => setBlurred(true), 1000);
     return () => clearTimeout(id);
-  }, [focused, modalOpen]);
+  }, [focused, modalOpen, listening, touch]);
 
   return (
     <div id="typingTest" onClick={() => inputRef.current?.focus()}>

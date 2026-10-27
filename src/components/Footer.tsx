@@ -1,4 +1,5 @@
 import { usePreviewTheme } from "../lib/commands";
+import { isTouchDevice } from "../lib/device";
 import { useConfig } from "../store/config";
 import { useTest } from "../store/test";
 import { useUi } from "../store/ui";
@@ -22,7 +23,7 @@ export function Footer() {
   const theme = previewTheme ?? configTheme;
   const page = useUi((s) => s.page);
   const finished = useTest((s) => s.status === "finished");
-  const showMicHint = page === "test" && !finished;
+  const showMicHint = page === "test" && !finished && !isTouchDevice();
 
   return (
     <footer id="footer">

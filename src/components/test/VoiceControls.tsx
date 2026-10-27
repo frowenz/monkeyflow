@@ -1,9 +1,11 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
+import { isTouchDevice } from "../../lib/device";
 import { subscribeLevel, toggleListening, useVoice } from "../../store/voice";
 
 export function refocusInput() {
+  if (isTouchDevice()) return;
   requestAnimationFrame(() => document.getElementById("wordsInput")?.focus());
 }
 
@@ -11,6 +13,7 @@ export function MicButton({ className = "" }: { className?: string }) {
   const listening = useVoice((s) => s.listening);
   const recognizer = useVoice((s) => s.recognizer);
   const dictation = useTest((s) => s.dictation);
+  const everUsed = useVoice((s) => s.everUsed);
   const ringRef = useRef<HTMLSpanElement>(null);
 
   useEffect(
@@ -27,7 +30,7 @@ export function MicButton({ className = "" }: { className?: string }) {
     <button
       type="button"
       id="micButton"
-      className={`textButton ${listening ? "listening" : ""} ${starting ? "starting" : ""} ${className}`}
+      className={`textButton ${listening ? "listening" : ""} ${starting ? "starting" : ""} ${!everUsed && !listening ? "invite" : ""} ${className}`}
       aria-label={listening ? "stop listening" : "start listening"}
       data-balloon-pos="left"
       onMouseDown={(e) => e.preventDefault()}
@@ -48,12 +51,25 @@ export function VoiceControls() {
   const speechText = useTest((s) => s.speechText);
   const dictation = useTest((s) => s.dictation);
   const listening = useVoice((s) => s.listening);
+  const blocked = useVoice((s) => s.blocked);
+  const supported = useVoice((s) => s.supported);
   const showTranscript = useConfig((s) => s.showTranscript);
 
   const heard = speechText.split(/\s+/).slice(-12).join(" ");
 
   let hint: ReactNode = null;
-  if (status === "idle") {
+  if (status === "idle" && blocked) {
+    hint = (
+      <>
+        <i className="fas fa-microphone-slash" />
+        mic blocked - allow it in your browser's site settings
+      </>
+    );
+  } else if (status === "idle" && !supported && !listening) {
+    hint = <>no speech recognition in this browser - try chrome, or dictate with wispr flow</>;
+  } else if (status === "idle" && !listening && isTouchDevice()) {
+    hint = <>tap the mic, then read out loud</>;
+  } else if (status === "idle") {
     hint = listening ? (
       <>
         <span className="listeningDot" />

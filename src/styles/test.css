@@ -294,6 +294,26 @@
 #micButton.listening::before {
   content: none;
 }
+#micButton.invite {
+  color: var(--text-color);
+}
+#micButton.invite .micRing {
+  animation: micInvite 2.2s ease-in-out infinite;
+}
+@keyframes micInvite {
+  0% {
+    opacity: 0.22;
+    transform: scale(0.55);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
 #micButton.starting i {
   animation: micPulse 0.9s ease-in-out infinite;
 }

@@ -12,6 +12,10 @@ interface VoiceState {
   micReady: boolean;
   supported: boolean;
   lastHeard: string;
+  /** Mic access was refused; shown in place of the start hint until it works. */
+  blocked: boolean;
+  /** Has this visitor ever turned the mic on (drives the first-visit mic pulse). */
+  everUsed: boolean;
 }
 
 export const useVoice = create<VoiceState>(() => ({
@@ -20,6 +24,8 @@ export const useVoice = create<VoiceState>(() => ({
   micReady: false,
   supported: typeof window !== "undefined" ? isSpeechSupported() : false,
   lastHeard: "",
+  blocked: false,
+  everUsed: typeof localStorage !== "undefined" && localStorage.getItem("monkeyflow-mic-used") === "1",
 }));
 
 const levelListeners = new Set<(level: number) => void>();
@@ -66,7 +72,10 @@ const recognizerHandlers: RecognizerEvents = {
     test.commitSpeech(text);
   },
   onState: (state) => useVoice.setState({ recognizer: state }),
-  onError: (_code, message) => {
+  onError: (code, message) => {
+    if (code === "not-allowed" || code === "service-not-allowed" || code === "audio-capture") {
+      useVoice.setState({ blocked: true });
+    }
     notify(message, "error");
     stopListening();
   },
@@ -100,7 +109,8 @@ export async function startListening(): Promise<void> {
     );
   }
   useTest.getState().setDictation(!builtin);
-  useVoice.setState({ listening: true });
+  useVoice.setState({ listening: true, blocked: false, everUsed: true });
+  localStorage.setItem("monkeyflow-mic-used", "1");
   if (builtin) {
     recognizer.lang = speechLang;
     recognizer.start();
@@ -108,8 +118,13 @@ export async function startListening(): Promise<void> {
   try {
     await mic.start();
     useVoice.setState({ micReady: true });
-  } catch {
+  } catch (err) {
     useVoice.setState({ micReady: false });
+    if ((err as DOMException)?.name === "NotAllowedError" && !builtin) {
+      useVoice.setState({ blocked: true });
+      stopListening();
+      return;
+    }
     if (!builtin) {
       notify("Couldn't access the microphone, so the timer will start when text arrives.", "notice");
     }
