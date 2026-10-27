@@ -1,7 +1,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
-import { isTouchDevice } from "../../lib/device";
+import { inAppBrowser, isIOS, isTouchDevice } from "../../lib/device";
+import { notify } from "../../store/ui";
 import { subscribeLevel, toggleListening, useVoice } from "../../store/voice";
 
 export function refocusInput() {
@@ -57,8 +58,29 @@ export function VoiceControls() {
 
   const heard = speechText.split(/\s+/).slice(-12).join(" ");
 
+  const inApp = inAppBrowser();
   let hint: ReactNode = null;
-  if (status === "idle" && blocked) {
+  if (status === "idle" && inApp && (!supported || blocked)) {
+    hint = (
+      <>
+        <i className="fas fa-external-link-alt" />
+        open this page in {isIOS() ? "safari" : "chrome"} to use your voice
+        <button
+          type="button"
+          className="textButton copyLinkButton"
+          onClick={() => {
+            void navigator.clipboard?.writeText(window.location.href).then(
+              () => notify("Link copied - paste it in your browser.", "success"),
+              () => notify(window.location.href, "notice", "Copy this link"),
+            );
+          }}
+        >
+          <i className="fas fa-link" />
+          copy link
+        </button>
+      </>
+    );
+  } else if (status === "idle" && blocked) {
     hint = (
       <>
         <i className="fas fa-microphone-slash" />
