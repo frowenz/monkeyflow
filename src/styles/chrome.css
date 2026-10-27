@@ -273,6 +273,7 @@
 #footer .textButton {
   padding: 6px;
   gap: 6px;
+  white-space: nowrap;
   font-size: 12px;
   line-height: 15px;
 }

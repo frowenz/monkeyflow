@@ -1,5 +1,6 @@
 import { usePreviewTheme } from "../lib/commands";
 import { useConfig } from "../store/config";
+import { useTest } from "../store/test";
 import { useUi } from "../store/ui";
 
 const LINKS: { icon: string; label: string; href?: string }[] = [
@@ -20,15 +21,17 @@ export function Footer() {
   const previewTheme = usePreviewTheme((s) => s.name);
   const theme = previewTheme ?? configTheme;
   const page = useUi((s) => s.page);
+  const finished = useTest((s) => s.status === "finished");
+  const showMicHint = page === "test" && !finished;
 
   return (
     <footer id="footer">
-      <div className={`keyTips ${page === "test" ? "withVoiceHint" : ""}`}>
+      <div className={`keyTips ${showMicHint ? "withVoiceHint" : ""}`}>
         <div>
           <kbd>tab &gt; enter</kbd>
           <span>- restart test</span>
         </div>
-        {page === "test" && (
+        {showMicHint && (
           <div>
             <kbd>enter</kbd>
             <span>- start / stop listening</span>

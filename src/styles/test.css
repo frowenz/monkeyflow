@@ -305,7 +305,7 @@
   }
 }
 
-.voiceHint {
+.testControls .voiceHint {
   position: absolute;
   top: calc(100% + 0.25rem);
   left: 0;
@@ -319,11 +319,11 @@
   transition: opacity 0.2s;
   text-align: center;
 }
-.voiceHint.hidden {
+.testControls .voiceHint.hidden {
   opacity: 0;
 }
 
-.transcript {
+.testControls .transcript {
   position: absolute;
   top: calc(100% + 1.5rem);
   left: 0;
@@ -339,10 +339,10 @@
   text-align: center;
   transition: opacity 0.2s;
 }
-.transcript .interim {
+.testControls .transcript .interim {
   opacity: 0.6;
 }
-.transcript.hidden {
+.testControls .transcript.hidden {
   opacity: 0;
 }
 
@@ -350,7 +350,7 @@
   transition: opacity 0.125s cubic-bezier(0.4, 0, 0.2, 1), color 0.125s;
 }
 
-#app.focus .voiceHint,
+#app.focus .testControls .voiceHint,
 #app.focus #restartTestButton,
 #app.focus #micButton:not(.listening) {
   opacity: 0;
