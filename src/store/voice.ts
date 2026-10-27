@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { MicMonitor } from "../lib/mic";
 import { normalizeWord } from "../lib/normalize";
 import { speechLangFor } from "../lib/words";
-import { isSpeechSupported, Recognizer, type RecognizerEvents, type RecognizerState } from "../lib/speech";
+import { detectSpeechQuirks, isSpeechSupported, Recognizer, type RecognizerEvents, type RecognizerState } from "../lib/speech";
 import { getConfig, useConfig } from "./config";
 import { useTest } from "./test";
 import { notify } from "./ui";
@@ -28,6 +28,8 @@ export const useVoice = create<VoiceState>(() => ({
   blocked: false,
   everUsed: typeof localStorage !== "undefined" && localStorage.getItem("monkeyflow-mic-used") === "1",
 }));
+
+const quirks = detectSpeechQuirks();
 
 const levelListeners = new Set<(level: number) => void>();
 export function subscribeLevel(cb: (level: number) => void): () => void {
@@ -82,8 +84,14 @@ const recognizerHandlers: RecognizerEvents = {
   },
   onActivity: () => {
     // with the mic meter running, voice activity timing comes from the audio itself
-    if (!useVoice.getState().micReady) useTest.getState().noteVoiceActivity(performance.now());
+    if (useVoice.getState().micReady) return;
+    useTest.getState().noteVoiceActivity(performance.now());
+    mic.pulse();
   },
+  onSpeechStart: (at) => {
+    if (!useVoice.getState().micReady) useTest.getState().noteVoiceStart(at);
+  },
+  onNotice: (message) => notify(message, "notice"),
 };
 
 const recognizer = new Recognizer(recognizerHandlers);
@@ -99,6 +107,7 @@ const mic = new MicMonitor({
     }
   },
   onVoiceStart: (at) => useTest.getState().noteVoiceStart(at),
+  onLost: () => useVoice.setState({ micReady: false }),
 });
 
 export async function startListening(): Promise<void> {
@@ -116,6 +125,11 @@ export async function startListening(): Promise<void> {
   if (builtin) {
     recognizer.lang = speechLangFor(language, speechLang);
     recognizer.start();
+    // Phones give the mic to one capture: a meter stream starves Android's recognizer and is muted on iOS.
+    if (quirks.exclusiveMic) {
+      useVoice.setState({ micReady: false });
+      return;
+    }
   }
   try {
     await mic.start();
@@ -183,14 +197,26 @@ export async function resumeListeningIfAllowed(): Promise<void> {
   } catch {
     return;
   }
+  // Safari only starts recognition inside a user gesture, so wait for the first tap or key.
+  if (quirks.webkit) {
+    const onGesture = (e: Event) => {
+      window.removeEventListener("click", onGesture, true);
+      window.removeEventListener("keydown", onGesture, true);
+      const onMic = (e.target as Element | null)?.closest?.("#micButton");
+      if (useVoice.getState().listening || onMic || (e as KeyboardEvent).key === "Enter") return;
+      void startListening();
+    };
+    window.addEventListener("click", onGesture, true);
+    window.addEventListener("keydown", onGesture, true);
+    return;
+  }
   await startListening();
+  const events = ["pointerdown", "pointerup", "keydown"] as const;
   const resume = () => {
     mic.resumeAudio();
-    window.removeEventListener("pointerdown", resume);
-    window.removeEventListener("keydown", resume);
+    for (const t of events) window.removeEventListener(t, resume);
   };
-  window.addEventListener("pointerdown", resume);
-  window.addEventListener("keydown", resume);
+  for (const t of events) window.addEventListener(t, resume);
 }
 
 /** Feeds text through the same path as live recognition (interim words, then finals). */

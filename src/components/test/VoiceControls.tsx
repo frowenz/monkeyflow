@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
 import { inAppBrowser, isIOS, isTouchDevice } from "../../lib/device";
+import { detectSpeechQuirks } from "../../lib/speech";
 import { notify } from "../../store/ui";
 import { subscribeLevel, toggleListening, useVoice } from "../../store/voice";
 
@@ -58,7 +59,7 @@ export function VoiceControls() {
 
   const heard = speechText.split(/\s+/).slice(-12).join(" ");
 
-  const inApp = inAppBrowser();
+  const inApp = inAppBrowser() ?? (detectSpeechQuirks().embedded ? "browser" : null);
   let hint: ReactNode = null;
   if (status === "idle" && inApp && (!supported || blocked)) {
     hint = (
