@@ -288,8 +288,8 @@
   pointer-events: none;
 }
 #micButton.listening .micRing {
-  opacity: calc(0.08 + var(--level) * 0.3);
-  transform: scale(calc(0.62 + var(--level) * 0.75));
+  opacity: calc(0.07 + var(--level) * 0.16);
+  transform: scale(calc(0.6 + var(--level) * 0.5));
 }
 #micButton.listening::before {
   content: none;

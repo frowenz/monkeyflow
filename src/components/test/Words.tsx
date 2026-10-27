@@ -59,6 +59,42 @@ const Word = memo(function Word({ text, result, active, lenient }: WordProps) {
   );
 }, sameWord);
 
+/**
+ * Recognizers deliver words in bursts of 2-4. Reveal a burst word by word over
+ * at most ~140ms so the highlight flows instead of jumping.
+ */
+function useRevealedWord(target: number, testId: number): number {
+  const [shown, setShown] = useState(target);
+  const shownRef = useRef(target);
+
+  useEffect(() => {
+    shownRef.current = 0;
+    setShown(0);
+  }, [testId]);
+
+  useEffect(() => {
+    const from = shownRef.current;
+    if (target <= from + 1) {
+      shownRef.current = target;
+      setShown(target);
+      return;
+    }
+    const stepMs = Math.min(45, 140 / (target - from));
+    let next = from + 1;
+    shownRef.current = next;
+    setShown(next);
+    const id = window.setInterval(() => {
+      next = Math.min(next + 1, target);
+      shownRef.current = next;
+      setShown(next);
+      if (next >= target) clearInterval(id);
+    }, stepMs);
+    return () => clearInterval(id);
+  }, [target]);
+
+  return Math.min(shown, target);
+}
+
 export function Words({ blurred }: { blurred: boolean }) {
   const targets = useTest((s) => s.targets);
   const alignment = useTest((s) => s.alignment);
@@ -86,8 +122,8 @@ export function Words({ blurred }: { blurred: boolean }) {
   const [lineStep, setLineStep] = useState(51);
   const [noTransition, setNoTransition] = useState(true);
 
-  const caretWord = alignment.caretWord;
-  const caretLetter = alignment.caretLetter;
+  const caretWord = useRevealedWord(alignment.caretWord, testId);
+  const caretLetter = caretWord === alignment.caretWord ? alignment.caretLetter : 0;
   const visibleCount = Math.min(targets.length, caretWord + RENDER_AHEAD);
 
   useLayoutEffect(() => {
@@ -171,7 +207,7 @@ export function Words({ blurred }: { blurred: boolean }) {
           <Word
             key={`${testId}-${i}`}
             text={w}
-            result={alignment.words[i]}
+            result={i < caretWord || i === alignment.caretWord ? alignment.words[i] : undefined}
             active={i === caretWord && status !== "finished"}
             lenient={lenient}
           />
