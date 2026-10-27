@@ -70,7 +70,7 @@ kbd {
   padding: 0.2em 0.4em;
   font-size: 0.75em;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  line-height: 12px;
+  line-height: 1.333;
   transition: background 0.125s, color 0.125s;
 }
 
@@ -212,7 +212,7 @@ main.page {
   justify-content: center;
   gap: 0.5em;
   padding: 0.5em;
-  min-height: 2.5em;
+  min-height: 2.25em;
   border: none;
   border-radius: var(--roundness);
   background: var(--sub-alt-color);

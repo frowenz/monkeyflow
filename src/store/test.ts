@@ -130,6 +130,20 @@ function loadPbs(): Record<string, number> {
   }
 }
 
+export interface LifetimeStats {
+  tests: number;
+  seconds: number;
+  best: number;
+}
+
+export function lifetimeStats(): LifetimeStats {
+  try {
+    return { tests: 0, seconds: 0, best: 0, ...JSON.parse(localStorage.getItem("monkeyflow-stats") || "{}") };
+  } catch {
+    return { tests: 0, seconds: 0, best: 0 };
+  }
+}
+
 export function savedResults(): TestResult[] {
   try {
     return JSON.parse(localStorage.getItem("monkeyflow-results") || "[]");
@@ -396,6 +410,11 @@ export const useTest = create<TestState>((set, get) => {
       };
 
       if (!invalid) {
+        const stats = lifetimeStats();
+        localStorage.setItem(
+          "monkeyflow-stats",
+          JSON.stringify({ tests: stats.tests + 1, seconds: stats.seconds + time, best: Math.max(stats.best, wpm) }),
+        );
         const all = savedResults();
         all.unshift(result);
         localStorage.setItem("monkeyflow-results", JSON.stringify(all.slice(0, 50).map((r) => ({ ...r, words: [], chart: { wpm: [], raw: [], burst: [], err: [], labels: [] } }))));
