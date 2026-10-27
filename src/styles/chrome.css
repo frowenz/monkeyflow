@@ -186,6 +186,10 @@
   }
 }
 
+#testConfig .mobileTestConfigButton {
+  display: none;
+}
+
 @media (width <= 1100px) {
   #testConfig {
     grid-template-columns: auto;
@@ -196,6 +200,22 @@
   #testConfig .cardWrap.right {
     place-self: center;
     margin: 0;
+  }
+}
+
+@media (width < 768px) {
+  #testConfig .cardWrap {
+    display: none;
+  }
+  #testConfig .mobileTestConfigButton {
+    display: inline-flex;
+    justify-self: center;
+    gap: 0.5em;
+    padding: 8px 16px;
+    height: 36px;
+    font-size: 1rem;
+    line-height: 20px;
+    background: var(--sub-alt-color);
   }
 }
 
@@ -262,13 +282,17 @@
   #footer .footerLinks {
     display: grid;
     grid-template-columns: repeat(4, max-content);
+    justify-items: start;
   }
   #footer .footerRight {
     flex-direction: column;
   }
 }
-@media (width < 560px) {
+@media (width < 640px) {
   #footer .footerLinks {
-    grid-template-columns: repeat(2, max-content);
+    grid-template-columns: max-content;
+  }
+  #footer .footerRight .textButton {
+    justify-content: flex-end;
   }
 }

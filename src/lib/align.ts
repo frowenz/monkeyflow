@@ -233,11 +233,15 @@ export function align(
     const o = op[i * W + j];
     if (o === OP_MATCH || o === OP_SUB || o === OP_PARTIAL) {
       const tok = tokens[i - 1];
-      if (o === OP_PARTIAL || (o === OP_MATCH && tok.inProgress)) {
-        words[j - 1] = { status: "partial", input: tok.text, interim: !!tok.interim };
+      if (tok.inProgress) {
+        words[j - 1] = {
+          status: o === OP_MATCH ? "correct" : "partial",
+          input: tok.text,
+          interim: !!tok.interim,
+        };
         if (j === bestJ) {
           caretWord = j - 1;
-          caretLetter = tok.text.length;
+          caretLetter = o === OP_MATCH ? targets[j - 1].length : tok.text.length;
         }
       } else {
         words[j - 1] = {

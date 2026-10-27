@@ -1,6 +1,7 @@
 .pageTest {
   display: grid;
   grid-template-rows: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr);
   height: 100%;
   position: relative;
 }
@@ -297,6 +298,8 @@
 }
 
 .voiceHint {
+  max-width: 100%;
+  padding: 0 1rem;
   margin-top: 0.25rem;
   font-size: 0.75rem;
   line-height: 1rem;

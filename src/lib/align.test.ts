@@ -64,9 +64,9 @@ describe("align", () => {
     expect(a.caretLetter).toBe(1);
   });
 
-  it("treats a complete trailing word as partial-correct (wispr without trailing space)", () => {
-    const a = run("the quick brown fox", "The quick brown fox", { keyboard: true });
-    expect(statuses(a)).toBe("cccp");
+  it("counts a complete trailing word as correct (wispr text without trailing space)", () => {
+    const a = run("the quick brown fox", "The quick brown fox.", { keyboard: true });
+    expect(statuses(a)).toBe("cccc");
     expect(a.caretWord).toBe(3);
     expect(a.caretLetter).toBe(3);
   });

@@ -71,6 +71,15 @@ export function TestConfig() {
 
   return (
     <div id="testConfig" className={focus ? "hidden" : ""}>
+      <button
+        type="button"
+        className="textButton mobileTestConfigButton"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => useUi.getState().openCommandLine()}
+      >
+        <i className="fas fa-cog" />
+        test settings
+      </button>
       <div className="cardWrap left">
         <div className="card">
           {engineBtn("builtin", "fas fa-microphone", "built-in", "use your browser's speech recognition")}

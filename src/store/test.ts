@@ -193,7 +193,8 @@ export const useTest = create<TestState>((set, get) => {
       const last = alignment.words[n - 1];
       if (n > 0 && last && alignment.caretWord >= n - 1) {
         const done =
-          (alignment.caretWord >= n && (last.status === "correct" || !last.interim)) ||
+          last.status === "correct" ||
+          (alignment.caretWord >= n && !last.interim) ||
           (last.status === "partial" && wordsMatch(targets[n - 1], last.input, c.strictness));
         if (done) {
           let endAt = now;
