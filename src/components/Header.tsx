@@ -1,6 +1,7 @@
 import { useTest } from "../store/test";
 import { useUi, type Page } from "../store/ui";
 import { LogoIcon } from "./Logo";
+import { appPath } from "../lib/base";
 
 const NAV: { page: Page; icon: string; label: string }[] = [
   { page: "test", icon: "fas fa-keyboard", label: "test" },
@@ -24,7 +25,7 @@ export function Header() {
   return (
     <header id="header">
       <a
-        href="/"
+        href={appPath()}
         className="logo"
         aria-label="Monkey Flow Home"
         onClick={(e) => {
@@ -42,7 +43,7 @@ export function Header() {
         {NAV.map((item) => (
           <a
             key={item.page}
-            href={item.page === "test" ? "/" : `/${item.page}`}
+            href={appPath(item.page === "test" ? "" : item.page)}
             className={`textButton navButton ${page === item.page ? "current" : ""}`}
             onClick={(e) => {
               e.preventDefault();
@@ -69,7 +70,7 @@ export function Header() {
           {notifications > 0 && <span className="navDot" />}
         </button>
         <a
-          href="/login"
+          href={appPath("login")}
           className={`textButton navButton ${page === "login" ? "current" : ""}`}
           onClick={(e) => {
             e.preventDefault();

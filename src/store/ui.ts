@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { appPath } from "../lib/base";
 
 export type Page = "test" | "settings" | "about" | "leaderboards" | "login";
 
@@ -31,15 +32,15 @@ interface UiState {
 }
 
 const PATHS: Record<Page, string> = {
-  test: "/",
-  settings: "/settings",
-  about: "/about",
-  leaderboards: "/leaderboards",
-  login: "/login",
+  test: appPath(),
+  settings: appPath("settings"),
+  about: appPath("about"),
+  leaderboards: appPath("leaderboards"),
+  login: appPath("login"),
 };
 
 function pageFromPath(path: string): Page {
-  const entry = Object.entries(PATHS).find(([, p]) => p === path);
+  const entry = Object.entries(PATHS).find(([, p]) => p === path || p === `${path}/`);
   return (entry?.[0] as Page) ?? "test";
 }
 

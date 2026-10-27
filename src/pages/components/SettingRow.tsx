@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useConfig, type Config } from "../../store/config";
 import { notify } from "../../store/ui";
 import type { Option } from "./options";
+import { appPath } from "../../lib/base";
 
 export function OptionButtons<K extends keyof Config>({
   setting,
@@ -34,7 +35,7 @@ export function OptionButtons<K extends keyof Config>({
 }
 
 function copyLink(id: string) {
-  const url = `${window.location.origin}/settings#${id}`;
+  const url = `${window.location.origin}${appPath("settings")}#${id}`;
   navigator.clipboard?.writeText(url).then(
     () => notify("Link copied to clipboard", "success"),
     () => notify(url, "notice", "Link"),

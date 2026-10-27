@@ -1,4 +1,5 @@
 import themesData from "../data/themes.json";
+import { appPath } from "./base";
 
 export interface Theme {
   name: string;
@@ -54,7 +55,7 @@ let faviconTemplate: Promise<string | null> | null = null;
 
 /** Recolors public/favicon.svg (authored in serika dark) to match the active theme. */
 export function updateFavicon(t: Theme): void {
-  faviconTemplate ??= fetch("/favicon.svg")
+  faviconTemplate ??= fetch(appPath("favicon.svg"))
     .then((r) => (r.ok ? r.text() : null))
     .catch(() => null);
   void faviconTemplate.then((template) => {
