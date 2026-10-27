@@ -195,10 +195,6 @@
   animation: none;
   opacity: 1;
 }
-#caret.listening {
-  --level: 0;
-  box-shadow: 0 0 calc(var(--level) * 0.45em) calc(var(--level) * 0.06em) var(--caret-color);
-}
 
 #paceCaret {
   position: absolute;
@@ -380,7 +376,6 @@
   height: 6px;
   border-radius: 50%;
   background: var(--main-color);
-  animation: micPulse 1.2s ease-in-out infinite;
 }
 .testControls .voiceHint.hidden {
   opacity: 0;

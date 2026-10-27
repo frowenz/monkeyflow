@@ -2,7 +2,6 @@ import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { WordResult } from "../../lib/align";
 import { normalizeWord, similarity, wordsMatch } from "../../lib/normalize";
 import { useConfig } from "../../store/config";
-import { subscribeLevel, useVoice } from "../../store/voice";
 import { bestPbFor, currentModeTwo, useTest } from "../../store/test";
 
 const RENDER_AHEAD = 120;
@@ -120,18 +119,8 @@ export function Words({ blurred }: { blurred: boolean }) {
   const colorful = useConfig((s) => s.colorfulMode);
 
   const wordsRef = useRef<HTMLDivElement>(null);
-  const caretRef = useRef<HTMLDivElement>(null);
   const paceRef = useRef<HTMLDivElement>(null);
   const paceWpm = usePaceWpm();
-  const listening = useVoice((s) => s.listening);
-
-  useEffect(
-    () =>
-      subscribeLevel((level) => {
-        caretRef.current?.style.setProperty("--level", level.toFixed(3));
-      }),
-    [],
-  );
   const [caret, setCaret] = useState({ left: 0, top: 0, height: 0 });
   const [scrollLines, setScrollLines] = useState(0);
   const [lineStep, setLineStep] = useState(51);
@@ -247,8 +236,7 @@ export function Words({ blurred }: { blurred: boolean }) {
       <div id="paceCaret" ref={paceRef} />
       <div
         id="caret"
-        ref={caretRef}
-        className={`${status === "active" ? "typing" : ""} ${smoothCaret ? "smooth" : ""} ${listening ? "listening" : ""}`}
+        className={`${status === "active" ? "typing" : ""} ${smoothCaret ? "smooth" : ""}`}
         style={{
           transform: `translate(${caret.left}px, ${caret.top}px)`,
           height: caret.height || undefined,
