@@ -5,6 +5,7 @@ import { useUi } from "../../store/ui";
 import { isTouchDevice } from "../../lib/device";
 import { dailyNumber } from "../../lib/words";
 import { onDictationDetected, useVoice } from "../../store/voice";
+import { ChallengeBanner } from "../result/ChallengeBanner";
 import { ResultPage } from "../result/ResultPage";
 import { TestConfig } from "../TestConfig";
 import { LiveStats } from "./LiveStats";
@@ -57,6 +58,9 @@ function TestView() {
 
   return (
     <div id="typingTest" onClick={() => inputRef.current?.focus()}>
+      <div className="challengeBannerHost">
+        <ChallengeBanner />
+      </div>
       <LanguageButton />
       <div className="wordsArea">
         <LiveStats />

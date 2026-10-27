@@ -5,6 +5,7 @@ import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { Notifications } from "./components/Notifications";
 import { TestPage } from "./components/test/TestPage";
+import { useChallengeLink } from "./hooks/useChallengeLink";
 import { useGlobalKeys } from "./hooks/useGlobalKeys";
 import { applyTheme } from "./lib/themes";
 import { AboutPage } from "./pages/AboutPage";
@@ -54,6 +55,7 @@ export default function App() {
   }, [focus]);
   useFocusMode();
   useGlobalKeys();
+  useChallengeLink();
 
   return (
     <div id="app" className={`content-grid ${focus ? "focus" : ""}`}>

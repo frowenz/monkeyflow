@@ -70,6 +70,18 @@
   line-height: 1;
 }
 
+#result .challengeNote {
+  width: max-content;
+  margin-top: -0.25rem;
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--sub-color);
+  cursor: default;
+}
+#result .challengeNote .value {
+  color: var(--main-color);
+}
+
 @keyframes crownPop {
   from {
     transform: scale(0.4);
@@ -191,6 +203,41 @@
 }
 #result .resultStats .info .reason {
   color: var(--sub-color);
+}
+#result .resultStats .vsTyping .bottom.average {
+  color: var(--sub-color);
+}
+#result .resultStats .editTyping {
+  display: block;
+  padding: 0;
+  border: none;
+  border-radius: calc(var(--roundness) / 2);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.125s;
+}
+#result .resultStats .bottom .editTyping:hover {
+  color: var(--text-color);
+}
+#result .resultStats .editTyping:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.1rem var(--bg-color), 0 0 0 0.2rem var(--text-color);
+}
+
+#result .typingPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-bottom: 1rem;
+  color: var(--sub-color);
+  animation: resultFadeIn 0.25s ease-out;
+}
+#result .typingPrompt .input {
+  width: 3.5em;
+  text-align: center;
 }
 
 #result .group.source {
@@ -376,6 +423,49 @@
 #result.capturing [aria-label][data-balloon-pos]::after {
   display: none;
 }
+/* the capture snapshots computed styles, so a hover fade still running would be baked into the image */
+#result.capturing * {
+  transition: none !important;
+}
+
+/* ---------- challenge banner (first child of #typingTest) ---------- */
+
+.challengeBannerHost {
+  display: flex;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.challengeBannerHost:empty {
+  display: none;
+}
+#challengeBanner {
+  --balloon-font-size: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em 0.5em;
+  text-align: center;
+  color: var(--sub-color);
+  transition: opacity 0.125s;
+  animation: resultFadeIn 0.25s ease-out;
+}
+#challengeBanner.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+#challengeBanner .fa-crown,
+#challengeBanner .value {
+  color: var(--main-color);
+}
+#challengeBanner .sep {
+  opacity: 0.6;
+}
+#challengeBanner .dismiss {
+  padding: 0.25em 0.4em;
+  font-size: 0.75em;
+}
 
 /* ---------- responsive (tailwind breakpoints used by monkeytype) ---------- */
 
@@ -400,7 +490,8 @@
   }
 }
 
-@media (width < 64rem) {
+/* monkeytype switches at 64rem; the extra "vs typing" group needs the 3-column grid across the whole 768px-content band */
+@media (width <= 69rem) {
   #result .resultStats {
     grid-template-columns: repeat(3, max-content);
     grid-template-rows: 1fr 1fr;
@@ -425,8 +516,8 @@
     grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  #result .resultButton.spanTwo {
-    grid-column: span 2;
+  #challengeBanner .label {
+    display: none;
   }
   #result .voiceHint {
     white-space: normal;

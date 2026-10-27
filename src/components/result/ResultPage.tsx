@@ -1,6 +1,20 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
+import { useChallenge } from "../../hooks/useChallengeLink";
 import { QUOTE_GROUPS } from "../../lib/words";
 import { captureElement, copyImageOrDownload, screenshotFilename } from "../../lib/screenshot";
+import {
+  AVERAGE_TYPIST_WPM,
+  challengeFromResult,
+  challengeMatchesResult,
+  challengeOutcome,
+  challengeUrl,
+  compareToTyping,
+  copyText,
+  loadTypingWpm,
+  saveTypingWpm,
+  shareText,
+  xIntentUrl,
+} from "../../lib/share";
 import { useConfig } from "../../store/config";
 import { useTest, type TestResult } from "../../store/test";
 import { notify, useUi } from "../../store/ui";
@@ -58,12 +72,72 @@ function formatDate(ts: number): string {
 
 const nextFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
 
+function TypingSpeedPrompt({
+  initial,
+  autoFocus,
+  onSave,
+  onCancel,
+}: {
+  initial: number | null;
+  autoFocus: boolean;
+  onSave: (wpm: number) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(initial === null ? "" : String(initial));
+  const cancelled = useRef(false);
+  const commit = () => {
+    if (cancelled.current) {
+      cancelled.current = false;
+      return;
+    }
+    const n = Number(value);
+    if (value && n >= 1) onSave(n);
+    else onCancel();
+  };
+
+  return (
+    <div className="typingPrompt">
+      <label htmlFor="typingWpmInput">how fast do you type?</label>
+      <input
+        id="typingWpmInput"
+        className="input"
+        type="text"
+        inputMode="numeric"
+        autoComplete="off"
+        maxLength={3}
+        value={value}
+        autoFocus={autoFocus}
+        onChange={(e) => setValue(e.target.value.replace(/\D/g, "").slice(0, 3))}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          // keep Enter / Escape away from useGlobalKeys (restart, command line)
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            commit();
+          } else if (e.key === "Escape") {
+            e.stopPropagation();
+            cancelled.current = true;
+            setValue(initial === null ? "" : String(initial));
+            onCancel();
+            e.currentTarget.blur();
+          }
+        }}
+      />
+      <span>wpm</span>
+    </div>
+  );
+}
+
 export function ResultPage() {
   const result = useTest((s) => s.result);
   const historyOpen = useUi((s) => s.wordsHistoryOpen);
   const voiceCommands = useConfig((s) => s.voiceCommands);
   const listening = useVoice((s) => s.listening);
+  const challenge = useChallenge((s) => s.challenge);
   const [session] = useState(() => (result ? addToSession(result) : 0));
+  const [typingWpm, setTypingWpm] = useState(loadTypingWpm);
+  const [editingTyping, setEditingTyping] = useState(false);
   const [capturing, setCapturing] = useState(false);
   const [lockedHeight, setLockedHeight] = useState<number | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -91,6 +165,31 @@ export function ResultPage() {
     `${r.wpm.toFixed(2)} wpm` +
     (!r.isPb && r.previousPb !== null ? `\npersonal best: ${r.previousPb.toFixed(2)} wpm` : "");
 
+  const typing = compareToTyping(r.wpm, typingWpm);
+  const typingTooltip = typing.personal
+    ? `talking is ${typing.ratio.toFixed(2)}x your typing\nyou type ${typing.typingWpm} wpm`
+    : `${typing.ratio.toFixed(2)}x the average typist\n(${AVERAGE_TYPIST_WPM} wpm)`;
+  const ownChallenge = challengeFromResult(r);
+  const link = challengeUrl(ownChallenge);
+  const brag = shareText(r, { typingWpm, link });
+  const target = challenge && challenge.wpm !== null && challengeMatchesResult(challenge, r) ? challenge.wpm : null;
+  const outcome = target === null ? null : challengeOutcome(target, r);
+  const showTypingPrompt = !capturing && !r.invalid && (typingWpm === null || editingTyping);
+
+  const saveTypingSpeed = (wpm: number) => {
+    saveTypingWpm(wpm);
+    setTypingWpm(wpm);
+    setEditingTyping(false);
+  };
+
+  const copyChallengeLink = () => {
+    copyText(link).then((ok) => {
+      if (!ok) notify("Couldn't copy the link", "error");
+      else if (ownChallenge) notify("Challenge link copied to clipboard", "success");
+      else notify(`Copied link (${r.mode} tests can't be replayed)`, "notice");
+    });
+  };
+
   const saveScreenshot = (e: MouseEvent<HTMLButtonElement>) => {
     if (capturing) return;
     const forceDownload = e.shiftKey;
@@ -114,8 +213,11 @@ export function ResultPage() {
       setLockedHeight(null);
     };
     blob.then(finish, finish);
-    copyImageOrDownload(blob, screenshotFilename(r.timestamp), forceDownload)
-      .then((how) => notify(how === "copied" ? "Copied to clipboard" : "Screenshot downloaded", "success"))
+    copyImageOrDownload(blob, screenshotFilename(r.timestamp), forceDownload, { title: "monkeyflow", text: brag })
+      .then((how) => {
+        if (how === "copied") notify("Copied to clipboard", "success");
+        else if (how === "downloaded") notify("Screenshot downloaded", "success");
+      })
       .catch(() => notify("Couldn't save the screenshot", "error"));
   };
 
@@ -125,6 +227,10 @@ export function ResultPage() {
       ref={rootRef}
       className={capturing ? "capturing" : ""}
       style={lockedHeight ? { minHeight: lockedHeight } : undefined}
+      onKeyDown={(e) => {
+        // useGlobalKeys sends every Tab to #nextTestButton; once focus is inside the result, let Tab move between controls
+        if (e.key === "Tab") e.stopPropagation();
+      }}
     >
       <div id="resultScreenshotTarget" ref={targetRef}>
         <div className="resultTop">
@@ -146,6 +252,27 @@ export function ResultPage() {
               >
                 {Math.round(r.wpm)}
               </div>
+              {target !== null && challenge && (
+                <div
+                  className={`challengeNote ${outcome}`}
+                  aria-label={`challenge: ${target} wpm${challenge.acc !== null ? ` · ${challenge.acc}% acc` : ""}`}
+                  data-balloon-pos="up"
+                >
+                  {outcome === "beat" ? (
+                    <>
+                      you beat <span className="value">{target}</span> wpm!
+                    </>
+                  ) : outcome === "tied" ? (
+                    <>
+                      you tied <span className="value">{target}</span> wpm
+                    </>
+                  ) : (
+                    <>
+                      <span className="value">{target}</span> wpm to beat
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             <div className="group acc">
               <div className="top">acc</div>
@@ -207,6 +334,26 @@ export function ResultPage() {
               <div className="sub">{formatClock(session)} session</div>
             </div>
           </div>
+          {!r.invalid && (
+            <div className="group vsTyping">
+              <div className="top">vs typing</div>
+              <div
+                className={`bottom ${typing.personal ? "" : "average"}`}
+                aria-label={typingTooltip}
+                data-balloon-pos="up"
+                data-balloon-break=""
+              >
+                <div>{typing.label}</div>
+                {typing.personal ? (
+                  <button type="button" className="sub editTyping" onClick={() => setEditingTyping(true)}>
+                    your {typing.typingWpm} wpm
+                  </button>
+                ) : (
+                  <div className="sub">avg typist</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {r.quote && (
@@ -218,6 +365,15 @@ export function ResultPage() {
 
         <WordsHistory result={r} open={historyOpen} />
 
+        {showTypingPrompt && (
+          <TypingSpeedPrompt
+            initial={typingWpm}
+            autoFocus={editingTyping}
+            onSave={saveTypingSpeed}
+            onCancel={() => setEditingTyping(false)}
+          />
+        )}
+
         {capturing ? (
           <div className="ssWatermark">
             <div className="ssLogo">
@@ -225,7 +381,7 @@ export function ResultPage() {
               <span>monkeyflow</span>
             </div>
             <div className="ssMeta">
-              {formatDate(r.timestamp)} <span className="ssSep">|</span> voice typing test
+              {formatDate(r.timestamp)} <span className="ssSep">|</span> {window.location.host}
             </div>
           </div>
         ) : (
@@ -247,7 +403,7 @@ export function ResultPage() {
           <button
             type="button"
             id="nextTestButton"
-            className="textButton resultButton spanTwo"
+            className="textButton resultButton"
             aria-label="Next test"
             data-balloon-pos="down"
             onClick={() => useTest.getState().newTest()}
@@ -276,8 +432,29 @@ export function ResultPage() {
           </button>
           <button
             type="button"
+            id="copyChallengeLinkButton"
+            className="textButton resultButton"
+            aria-label="Copy challenge link"
+            data-balloon-pos="down"
+            onClick={copyChallengeLink}
+          >
+            <i className="fas fa-link fa-fw" />
+          </button>
+          <a
+            id="shareOnXButton"
+            className="textButton resultButton"
+            href={xIntentUrl(brag)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share on X"
+            data-balloon-pos="down"
+          >
+            <i className="fab fa-twitter fa-fw" />
+          </a>
+          <button
+            type="button"
             id="saveScreenshotButton"
-            className="textButton resultButton spanTwo"
+            className="textButton resultButton"
             aria-label={"Copy screenshot to clipboard\n(shift click to download)"}
             data-balloon-pos="down"
             data-balloon-break=""

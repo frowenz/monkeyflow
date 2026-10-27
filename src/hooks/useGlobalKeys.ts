@@ -22,6 +22,8 @@ export function useGlobalKeys() {
       const onButton = active?.tagName === "BUTTON" || active?.tagName === "A";
 
       if (e.key === "Tab") {
+        // once a button has focus, let Tab move through the buttons natively
+        if (onButton) return;
         e.preventDefault();
         const id = test.status === "finished" ? "nextTestButton" : "restartTestButton";
         document.getElementById(id)?.focus();

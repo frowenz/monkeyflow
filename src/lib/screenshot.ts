@@ -1,4 +1,4 @@
-
+import { isTouchDevice } from "./device";
 export interface CaptureOptions {
   backgroundColor: string;
   /** Space around the element in the output image, in CSS pixels. */
@@ -38,24 +38,61 @@ export function downloadBlob(blob: Blob, filename: string): void {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function canCopyImage(): boolean {
+  if (typeof ClipboardItem === "undefined" || !navigator.clipboard?.write) return false;
+  const supports = (ClipboardItem as { supports?: (type: string) => boolean }).supports;
+  return typeof supports !== "function" || supports("image/png");
+}
+
+export type ScreenshotOutcome = "copied" | "shared" | "downloaded" | "cancelled";
+
 /**
- * Copies the PNG to the clipboard, falling back to a download. The ClipboardItem
- * is created synchronously with a pending blob so Safari keeps the user gesture.
+ * Copies the PNG to the clipboard; where that isn't possible but the Web Share
+ * API takes files (mobile), opens the share sheet; otherwise downloads it.
+ * The ClipboardItem is created synchronously with a pending blob so Safari
+ * keeps the user gesture.
  */
 export async function copyImageOrDownload(
   blob: Promise<Blob>,
   filename: string,
   forceDownload = false,
-): Promise<"copied" | "downloaded"> {
-  if (!forceDownload && typeof ClipboardItem !== "undefined" && navigator.clipboard?.write) {
+  share?: { title?: string; text?: string },
+): Promise<ScreenshotOutcome> {
+  // On phones the share sheet (straight into the X app) beats a clipboard image.
+  const preferShare = !forceDownload && isTouchDevice() && typeof navigator.canShare === "function";
+  if (preferShare) {
+    const file = new File([await blob], filename, { type: "image/png" });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ ...share, files: [file] });
+        return "shared";
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return "cancelled";
+      }
+    }
+  }
+  if (!forceDownload && canCopyImage()) {
     try {
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       return "copied";
     } catch {
-      // fall through to download
+      // fall through to share / download
     }
   }
-  downloadBlob(await blob, filename);
+  const png = await blob;
+  if (!forceDownload && !preferShare && typeof navigator.canShare === "function") {
+    const file = new File([png], filename, { type: "image/png" });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ ...share, files: [file] });
+        return "shared";
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return "cancelled";
+        // gesture expired or share target failed: download instead
+      }
+    }
+  }
+  downloadBlob(png, filename);
   return "downloaded";
 }
 
