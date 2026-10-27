@@ -200,7 +200,7 @@ const quoteLengthGroup = (): CommandGroup =>
     "Quote length...",
     "fa-quote-right",
     "quoteLength",
-    (["all", "short", "medium", "long", "thicc"] as QuoteLength[]).map((q) => ({ value: q, display: q })),
+    (["all", "short", "medium", "long", "thicc", "daily"] as QuoteLength[]).map((q) => ({ value: q, display: q })),
     { restart: true, extraPatch: { mode: "quote" } },
   );
 

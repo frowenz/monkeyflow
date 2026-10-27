@@ -125,6 +125,14 @@ export function TestConfig() {
                 {q}
               </Btn>
             ))}
+            <Btn
+              icon="fas fa-calendar-day"
+              active={c.quoteLength === "daily"}
+              label="same quote for everyone today"
+              onClick={() => restartWith({ quoteLength: "daily" })}
+            >
+              daily
+            </Btn>
             <Btn icon="fas fa-search" onClick={() => useUi.getState().openCommandLine("quotes")} />
           </div>
         )}

@@ -3,6 +3,7 @@ import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
 import { useUi } from "../../store/ui";
 import { isTouchDevice } from "../../lib/device";
+import { dailyNumber } from "../../lib/words";
 import { onDictationDetected, useVoice } from "../../store/voice";
 import { ResultPage } from "../result/ResultPage";
 import { TestConfig } from "../TestConfig";
@@ -12,6 +13,7 @@ import { Words } from "./Words";
 
 function LanguageButton() {
   const language = useConfig((s) => s.language);
+  const daily = useConfig((s) => s.mode === "quote" && s.quoteLength === "daily");
   const status = useTest((s) => s.status);
 
   return (
@@ -22,8 +24,8 @@ function LanguageButton() {
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => useUi.getState().openCommandLine("language")}
       >
-        <i className="fas fa-globe-americas" />
-        {language.replace("_", " ")}
+        <i className={`fas ${daily ? "fa-calendar-day" : "fa-globe-americas"}`} />
+        {daily ? `daily #${dailyNumber()}` : language.replace("_", " ")}
       </button>
     </div>
   );

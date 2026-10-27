@@ -15,7 +15,7 @@ export interface Quote {
   length: number;
 }
 
-export type QuoteLength = "all" | "short" | "medium" | "long" | "thicc";
+export type QuoteLength = "all" | "short" | "medium" | "long" | "thicc" | "daily";
 export type Language =
   | "english"
   | "english_1k"
@@ -62,7 +62,7 @@ export const QUOTES: Quote[] = (quotesData as Quote[]).map((q) => ({
   text: q.text.replace(/\s+/g, " ").trim(),
 }));
 
-export const QUOTE_GROUPS: Record<Exclude<QuoteLength, "all">, [number, number]> = {
+export const QUOTE_GROUPS: Record<Exclude<QuoteLength, "all" | "daily">, [number, number]> = {
   short: [0, 100],
   medium: [101, 300],
   long: [301, 600],
@@ -187,7 +187,31 @@ export class WordGenerator {
   }
 }
 
+const DAILY_EPOCH = Date.UTC(2026, 9, 27);
+
+/** Daily challenge number; #1 is launch day. Rolls over at local midnight, like Wordle. */
+export function dailyNumber(date = new Date()): number {
+  const local = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  return Math.floor((local - DAILY_EPOCH) / 86400000) + 1;
+}
+
+const DAILY_POOL: Quote[] = (() => {
+  const pool = QUOTES.filter((q) => q.length >= 60 && q.length <= 220);
+  const rng = mulberry32(20261027);
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+})();
+
+export function dailyQuote(date = new Date()): Quote {
+  const n = dailyNumber(date);
+  return DAILY_POOL[(((n - 1) % DAILY_POOL.length) + DAILY_POOL.length) % DAILY_POOL.length];
+}
+
 export function randomQuote(length: QuoteLength, excludeId?: number): Quote {
+  if (length === "daily") return dailyQuote();
   const pool =
     length === "all"
       ? QUOTES
