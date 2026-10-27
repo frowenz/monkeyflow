@@ -168,6 +168,10 @@ export function AboutPage() {
           <li>Try quote mode: real sentences read naturally, so your speed goes up compared to random words.</li>
           <li>Use a good microphone in a quiet room, and keep it at a consistent distance from your mouth.</li>
           <li>Look a word or two ahead, just like you would when reading out loud.</li>
+          <li>
+            Feeling brave? Click the language above the words and pick tongue twisters - Peter Piper at full speed is
+            humbling.
+          </li>
         </ul>
       </section>
 
