@@ -332,24 +332,6 @@
 
 /* ---------- login tip, buttons, hints ---------- */
 
-#result .loginTip {
-  margin-bottom: 1rem;
-  text-align: center;
-  color: var(--sub-color);
-}
-#result .loginTip a {
-  color: var(--sub-color);
-  border-radius: calc(var(--roundness) / 2);
-  transition: color 0.125s;
-}
-#result .loginTip a:hover {
-  color: var(--text-color);
-}
-#result .loginTip a:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 0.1rem var(--bg-color), 0 0 0 0.2rem var(--text-color);
-}
-
 #result .resultButtons {
   display: grid;
   grid-auto-flow: column;

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { appPath } from "../lib/base";
 
-export type Page = "test" | "settings" | "about" | "leaderboards" | "login";
+export type Page = "test" | "settings" | "about" | "leaderboards";
 
 export type NotificationType = "notice" | "success" | "error";
 
@@ -36,7 +36,6 @@ const PATHS: Record<Page, string> = {
   settings: appPath("settings"),
   about: appPath("about"),
   leaderboards: appPath("leaderboards"),
-  login: appPath("login"),
 };
 
 function pageFromPath(path: string): Page {

@@ -13,7 +13,6 @@ const LINKS: { icon: string; label: string; href: string }[] = [
     label: "web speech",
     href: "https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API",
   },
-  { icon: "fab fa-github", label: "github", href: "https://github.com/monkeytypegame/monkeytype" },
 ];
 
 function Stat({ label, value, unit }: { label: string; value: string; unit: string }) {

@@ -1,35 +1,35 @@
-/* Settings, about, leaderboards and login pages. Measurements mirror monkeytype's
+/* Settings, about and results pages. Measurements mirror monkeytype's
  * Tailwind classes (gap-8 = 2rem, rounded = --roundness, rounded-xl = .75rem, ...). */
 
 /* ---------- shared ---------- */
 
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) .button {
   min-height: 0;
   line-height: 1.25;
 }
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button.active:hover {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) .button.active:hover {
   background: var(--text-color);
   color: var(--bg-color);
 }
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button:focus-visible {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) .button:focus-visible {
   outline: none;
   box-shadow:
     0 0 0 0.1rem var(--bg-color),
     0 0 0 0.2rem var(--text-color);
 }
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button:disabled {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) .button:disabled {
   opacity: 0.33;
   cursor: default;
   pointer-events: none;
 }
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button.dim {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) .button.dim {
   opacity: 0.33;
 }
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) .button.dim:hover {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) .button.dim:hover {
   opacity: 1;
 }
 /* a bare `monospace` family triggers Chrome's 13px monospace quirk and shrinks the chip */
-:is(.pageSettings, .pageAbout, .pageLeaderboards, .pageLogin) kbd {
+:is(.pageSettings, .pageAbout, .pageLeaderboards) kbd {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   line-height: 1.25;
 }
@@ -826,112 +826,5 @@
   }
   .pageLeaderboards .lbPanel {
     grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  }
-}
-
-/* ---------- login ---------- */
-
-.pageLogin {
-  display: flex;
-}
-.pageLogin .loginWrap {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: space-around;
-  gap: 1rem;
-}
-.pageLogin .loginColumn {
-  display: grid;
-  gap: 0.5rem;
-  width: 20rem;
-}
-.pageLogin h3 {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  margin: 0;
-  color: var(--sub-color);
-  font-size: 1em;
-  line-height: 1.25;
-}
-.pageLogin form {
-  display: grid;
-  gap: 0.5rem;
-}
-.pageLogin input.input {
-  display: block;
-  width: 100%;
-  padding: 0.5em;
-  line-height: 1.25em;
-}
-.pageLogin .button {
-  width: 100%;
-}
-.pageLogin .oauth {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-.pageLogin .orRow {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.pageLogin .orRow .line {
-  flex: 1;
-  height: 4px;
-  border-radius: var(--roundness);
-  background: var(--sub-alt-color);
-}
-.pageLogin .checkbox {
-  display: flex;
-  align-items: center;
-  gap: 0.5em;
-  width: max-content;
-  cursor: pointer;
-  user-select: none;
-}
-.pageLogin .checkbox input {
-  display: none;
-}
-.pageLogin .checkbox .box {
-  display: grid;
-  place-items: center;
-  width: 1.25em;
-  height: 1.25em;
-  flex-shrink: 0;
-  border-radius: calc(var(--roundness) / 2);
-  background: var(--sub-alt-color);
-}
-.pageLogin .checkbox .box i {
-  color: transparent;
-  transition: color 0.125s;
-}
-.pageLogin .checkbox input:checked + .box i {
-  color: var(--main-color);
-}
-.pageLogin .checkbox:hover input:checked + .box i {
-  color: var(--text-color);
-}
-.pageLogin .checkbox:hover .box i {
-  color: var(--sub-color);
-}
-.pageLogin .forgot {
-  justify-self: end;
-  padding: 0.5em;
-  font-size: 0.75em;
-}
-
-@media only screen and (width < 48rem) {
-  .pageLogin .loginWrap {
-    flex-direction: column;
-    justify-content: center;
-    gap: 3rem;
-  }
-}
-@media only screen and (width < 40rem) {
-  .pageLogin .loginColumn {
-    width: 100%;
   }
 }

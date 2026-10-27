@@ -424,7 +424,7 @@ export function rootGroup(): CommandGroup {
       },
       goTo("settings", "Go to settings", "fa-cog", "settings"),
       goTo("about", "Go to about", "fa-info", "about"),
-      goTo("leaderboards", "Go to leaderboards", "fa-crown", "leaderboards"),
+      goTo("leaderboards", "Go to your results", "fa-crown", "leaderboards"),
       {
         id: "resetSettings",
         display: "Reset settings",

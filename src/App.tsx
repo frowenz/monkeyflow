@@ -10,7 +10,6 @@ import { useGlobalKeys } from "./hooks/useGlobalKeys";
 import { applyTheme } from "./lib/themes";
 import { AboutPage } from "./pages/AboutPage";
 import { LeaderboardsPage } from "./pages/LeaderboardsPage";
-import { LoginPage } from "./pages/LoginPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { useConfig } from "./store/config";
 import { useTest } from "./store/test";
@@ -64,7 +63,6 @@ export default function App() {
       {page === "settings" && <SettingsPage />}
       {page === "about" && <AboutPage />}
       {page === "leaderboards" && <LeaderboardsPage />}
-      {page === "login" && <LoginPage />}
       <Footer />
       <CommandLine />
       <CustomTextModal />

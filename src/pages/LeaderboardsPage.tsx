@@ -145,7 +145,7 @@ export function LeaderboardsPage() {
       <div className="lbMain">
         <div>
           <h2 className="lbTitle">
-            {periodSpec.title} {boardSpec.title} Leaderboard
+            {periodSpec.title} {boardSpec.title} - Your Results
           </h2>
         </div>
         <div className="lbDivider" />

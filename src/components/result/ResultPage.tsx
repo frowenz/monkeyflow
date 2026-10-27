@@ -22,7 +22,6 @@ import { useVoice } from "../../store/voice";
 import { LogoIcon } from "../Logo";
 import { WordsHistory } from "./WordsHistory";
 import "../../styles/result.css";
-import { appPath } from "../../lib/base";
 import { publicHost } from "../../lib/base";
 
 const ResultChart = lazy(() => import("./ResultChart").then((m) => ({ default: m.ResultChart })));
@@ -386,20 +385,7 @@ export function ResultPage() {
               {formatDate(r.timestamp)} <span className="ssSep">|</span> {publicHost()}
             </div>
           </div>
-        ) : (
-          <div className="loginTip">
-            <a
-              href={appPath("login")}
-              onClick={(e) => {
-                e.preventDefault();
-                useUi.getState().setPage("login");
-              }}
-            >
-              Sign in
-            </a>{" "}
-            to save your result
-          </div>
-        )}
+        ) : null}
 
         <div className="resultButtons">
           <button

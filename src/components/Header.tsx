@@ -5,7 +5,7 @@ import { appPath } from "../lib/base";
 
 const NAV: { page: Page; icon: string; label: string }[] = [
   { page: "test", icon: "fas fa-keyboard", label: "test" },
-  { page: "leaderboards", icon: "fas fa-crown", label: "leaderboards" },
+  { page: "leaderboards", icon: "fas fa-crown", label: "your results" },
   { page: "about", icon: "fas fa-info", label: "about" },
   { page: "settings", icon: "fas fa-cog", label: "settings" },
 ];
@@ -20,7 +20,6 @@ function go(page: Page) {
 
 export function Header() {
   const page = useUi((s) => s.page);
-  const notifications = useUi((s) => s.notifications.length);
 
   return (
     <header id="header">
@@ -53,32 +52,6 @@ export function Header() {
             <i className={`${item.icon} fa-fw`} />
           </a>
         ))}
-        <div className="grow" />
-        <button
-          type="button"
-          className="textButton navButton"
-          onClick={() =>
-            useUi
-              .getState()
-              .notify(
-                "Monkey Flow listens for your voice. Click the mic (or press enter) and start reading.",
-                "notice",
-              )
-          }
-        >
-          <i className="fas fa-bell fa-fw" />
-          {notifications > 0 && <span className="navDot" />}
-        </button>
-        <a
-          href={appPath("login")}
-          className={`textButton navButton ${page === "login" ? "current" : ""}`}
-          onClick={(e) => {
-            e.preventDefault();
-            go("login");
-          }}
-        >
-          <i className="far fa-user fa-fw" />
-        </a>
       </nav>
     </header>
   );

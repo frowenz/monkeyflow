@@ -87,16 +87,6 @@
   color: var(--text-color);
 }
 
-#header .navDot {
-  position: absolute;
-  top: 7px;
-  right: 7px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--error-color);
-}
-
 #app.focus #header nav {
   opacity: 0;
   pointer-events: none;

@@ -373,7 +373,7 @@ const GROUPS: GroupSpec[] = [
         icon: "fas fa-trash-alt",
         title: "clear local results",
         description:
-          "Deletes every result and personal best saved on this device, emptying the leaderboard and about page stats.",
+          "Deletes every result and personal best saved on this device, emptying your results page and about page stats.",
         note: UNDO_NOTE,
         keywords: "delete history personal best",
         control: (

@@ -4,17 +4,6 @@ import { useConfig } from "../store/config";
 import { useTest } from "../store/test";
 import { useUi } from "../store/ui";
 
-const LINKS: { icon: string; label: string; href?: string }[] = [
-  { icon: "fas fa-envelope", label: "contact" },
-  { icon: "fas fa-donate", label: "support" },
-  { icon: "fas fa-code", label: "github", href: "https://github.com/monkeytypegame/monkeytype" },
-  { icon: "fab fa-discord", label: "discord" },
-  { icon: "fab fa-twitter", label: "twitter", href: "https://x.com/WisprFlow" },
-  { icon: "fas fa-file-contract", label: "terms" },
-  { icon: "fas fa-shield-alt", label: "security" },
-  { icon: "fas fa-lock", label: "privacy" },
-];
-
 export const VERSION = "v1.0.0";
 
 export function Footer() {
@@ -52,24 +41,14 @@ export function Footer() {
       </div>
       <div className="footerBottom">
         <div className="footerLinks">
-          {LINKS.map((l) =>
-            l.href ? (
-              <a key={l.label} className="textButton" href={l.href} target="_blank" rel="noreferrer noopener">
-                <i className={`${l.icon} fa-fw`} />
-                {l.label}
-              </a>
-            ) : (
-              <button
-                key={l.label}
-                type="button"
-                className="textButton"
-                onClick={() => useUi.getState().setPage("about")}
-              >
-                <i className={`${l.icon} fa-fw`} />
-                {l.label}
-              </button>
-            ),
-          )}
+          <button type="button" className="textButton" onClick={() => useUi.getState().setPage("about")}>
+            <i className="fas fa-info-circle fa-fw" />
+            about
+          </button>
+          <a className="textButton" href="https://monkeytype.com" target="_blank" rel="noreferrer noopener">
+            <i className="fas fa-keyboard fa-fw" />
+            inspired by monkeytype
+          </a>
         </div>
         <div className="footerRight">
           <button
