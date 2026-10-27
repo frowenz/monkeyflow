@@ -1,0 +1,108 @@
+/* Notifications — mirrors monkeytype's [data-ui-element="notifications"] overlay */
+
+#notificationCenter {
+  position: fixed;
+  top: 0;
+  right: 1rem;
+  z-index: 99999999;
+  display: grid;
+  align-content: start;
+  width: 21.875rem;
+  max-width: calc(100vw - 2rem);
+  padding-top: 1rem;
+  pointer-events: none;
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.notifWrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  margin-bottom: 1rem;
+  opacity: 1;
+  pointer-events: auto;
+  animation: mfNotifIn 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    margin-bottom 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notifWrap.closing {
+  grid-template-rows: 0fr;
+  margin-bottom: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.notifWrap.focusHidden {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notifClip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.notif {
+  --notif-border: rgba(0, 130, 251, 0.985);
+  --notif-bg: rgba(0, 77, 148, 0.9);
+  --notif-bg-hover: rgba(0, 77, 148, 0.5);
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  border: 2px solid var(--notif-border);
+  border-radius: calc(var(--roundness) * 2);
+  background: var(--notif-bg);
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  color: white;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notif:hover {
+  background: var(--notif-bg-hover);
+}
+
+.notif.success {
+  --notif-border: rgba(100, 206, 100, 0.71);
+  --notif-bg: rgba(0, 148, 0, 0.9);
+  --notif-bg-hover: rgba(0, 148, 0, 0.5);
+}
+
+.notif.error {
+  --notif-border: rgba(241, 51, 34, 0.71);
+  --notif-bg: rgba(138, 18, 12, 0.9);
+  --notif-bg-hover: rgba(138, 18, 12, 0.5);
+}
+
+.notifContent {
+  padding: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.notifTitle {
+  padding-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.notifTitle i {
+  display: inline;
+  margin-right: 0.5rem;
+}
+
+@keyframes mfNotifIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

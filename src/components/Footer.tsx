@@ -1,3 +1,4 @@
+import { usePreviewTheme } from "../lib/commands";
 import { useConfig } from "../store/config";
 import { useUi } from "../store/ui";
 
@@ -15,7 +16,9 @@ const LINKS: { icon: string; label: string; href?: string }[] = [
 export const VERSION = "v1.0.0";
 
 export function Footer() {
-  const theme = useConfig((s) => s.theme);
+  const configTheme = useConfig((s) => s.theme);
+  const previewTheme = usePreviewTheme((s) => s.name);
+  const theme = previewTheme ?? configTheme;
   const page = useUi((s) => s.page);
 
   return (

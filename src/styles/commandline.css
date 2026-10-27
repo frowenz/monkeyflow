@@ -1,0 +1,254 @@
+/* Command line — mirrors monkeytype's #CommandlineModal (dialog + .modal) */
+
+#commandLineWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 6rem 2rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.25;
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: mfCommandLineFadeIn 0.125s linear both;
+}
+
+#commandLineWrapper.previewTheme {
+  background-color: transparent;
+}
+
+#commandLineWrapper.closing {
+  pointer-events: none;
+  animation: mfCommandLineFadeOut 0.125s linear both;
+}
+
+#commandLine {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  max-width: 600px;
+  height: max-content;
+  max-height: 100%;
+  padding: 0;
+  overflow: hidden;
+  overscroll-behavior-y: none;
+  border-radius: calc(var(--roundness) * 2);
+  background: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: 0 0 0 0.2em transparent;
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.125s;
+  animation: mfCommandLineModalIn 0.125s ease-out both;
+}
+
+#commandLineWrapper.previewTheme #commandLine {
+  box-shadow: 0 0 0 0.2em var(--sub-alt-color);
+}
+
+#commandLineWrapper.closing #commandLine {
+  animation: mfCommandLineModalOut 0.125s ease-in both;
+}
+
+/* keeps the (finished) entry animation in the list so it doesn't restart when the shake ends */
+#commandLine.shake {
+  animation:
+    mfCommandLineModalIn 0.125s ease-out both,
+    mfCommandLineShake 0.1s ease-in-out 2;
+}
+
+#commandLine .searchRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+#commandLine .searchIcon {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+  margin: 1px 1rem 0;
+  color: var(--sub-color);
+  font-size: 1rem;
+  line-height: 1;
+  /* FA6's magnifier is drawn thinner than the glyph monkeytype ships */
+  -webkit-text-stroke: 0.6px currentColor;
+  transition: color 0.125s;
+}
+
+#commandLine .searchInput {
+  width: 100%;
+  margin: 0;
+  padding: 1rem 1rem 1rem 0;
+  border: none;
+  border-radius: var(--roundness);
+  outline: none;
+  background: var(--bg-color);
+  color: var(--text-color);
+  caret-color: var(--main-color);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  transition: background-color 0.125s, color 0.125s;
+}
+
+#commandLine .searchInput:focus-visible {
+  box-shadow: none;
+}
+
+#commandLine .searchInput::placeholder {
+  color: var(--sub-color);
+  opacity: 1;
+}
+
+#commandLine .suggestions {
+  position: relative;
+  display: grid;
+  align-content: start;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  cursor: pointer;
+  user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sub-color) transparent;
+}
+
+#commandLine .suggestions.hasRows {
+  padding-bottom: 0.5rem;
+}
+
+#commandLine .row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  padding: 0.5rem 1rem;
+  color: var(--sub-color);
+  font-size: 0.75rem;
+  line-height: 0.75rem;
+}
+
+#commandLine .row.active {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+
+#commandLine .row.themeRow {
+  position: relative;
+  grid-template-columns: auto 1fr auto;
+}
+
+#commandLine .row.extraRow {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+#commandLine .row i {
+  color: inherit;
+}
+
+#commandLine .rowIcon,
+#commandLine .checkIcon {
+  margin-right: 0.5rem;
+}
+
+#commandLine .chevron {
+  margin: 0 0.5rem;
+}
+
+#commandLine .invisible {
+  visibility: hidden;
+}
+
+#commandLine .rowText {
+  min-width: 0;
+}
+
+#commandLine .extraRow .rowText {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#commandLine .rowExtra {
+  max-width: 11rem;
+  margin-left: 1rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.6;
+}
+
+#commandLine .themeBubbles {
+  width: calc(3em + 1rem);
+  height: calc(1em + 0.5rem);
+  margin: -0.25rem 0;
+  border-radius: 9999px;
+  background-color: var(--bubble-bg);
+  background-image:
+    radial-gradient(circle closest-side, var(--bubble-main) 97%, transparent),
+    radial-gradient(circle closest-side, var(--bubble-sub) 97%, transparent),
+    radial-gradient(circle closest-side, var(--bubble-text) 97%, transparent);
+  background-position:
+    0.25rem center,
+    calc(1em + 0.5rem) center,
+    calc(2em + 0.75rem) center;
+  background-repeat: no-repeat;
+  background-size: 1em 1em;
+}
+
+@keyframes mfCommandLineFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mfCommandLineFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes mfCommandLineModalIn {
+  from {
+    opacity: 0;
+    margin-top: 1rem;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+
+@keyframes mfCommandLineModalOut {
+  from {
+    opacity: 1;
+    margin-top: 0;
+  }
+  to {
+    opacity: 0;
+    margin-top: 1rem;
+  }
+}
+
+@keyframes mfCommandLineShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-0.5rem);
+  }
+  75% {
+    transform: translateX(0.5rem);
+  }
+}

@@ -1,0 +1,251 @@
+/* Modals — mirrors monkeytype's AnimatedModal (dialog wrapper + .modal) */
+
+.mfModalWrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.5);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.25;
+  animation: mfModalFadeIn 0.125s ease-out both;
+}
+
+.mfModalWrapper.closing {
+  pointer-events: none;
+  animation: mfModalFadeOut 0.125s ease-in both;
+}
+
+.mfModal {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  max-width: 28rem;
+  height: min-content;
+  max-height: 100%;
+  padding: 1rem;
+  overflow: auto;
+  overscroll-behavior-y: none;
+  border-radius: calc(var(--roundness) * 2);
+  background: var(--bg-color);
+  color: var(--text-color);
+  box-shadow: 0 0 0 4px var(--sub-alt-color);
+  outline: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sub-color) transparent;
+  animation: mfModalIn 0.125s ease-out both;
+}
+
+.mfModalWrapper.closing .mfModal {
+  animation: mfModalOut 0.125s ease-in both;
+}
+
+@media (min-width: 640px) {
+  .mfModal {
+    padding: 2rem;
+  }
+}
+
+.mfModal .button {
+  min-height: 0;
+  transition:
+    color 0.125s cubic-bezier(0.4, 0, 0.2, 1),
+    background 0.125s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.125s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mfModal .button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.1rem var(--bg-color), 0 0 0 0.2rem var(--text-color);
+}
+
+.mfModal .button.active:hover {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+
+/* ---------- custom text ---------- */
+
+#customTextModal {
+  max-width: 1200px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  #customTextModal {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+  }
+}
+
+#customTextModal .ctForm {
+  display: contents;
+}
+
+#customTextModal .ctSeparator {
+  grid-row-start: 2;
+  width: 100%;
+  height: 0.25rem;
+  border-radius: var(--roundness);
+  background: var(--sub-alt-color);
+}
+
+#customTextModal .ctMain {
+  grid-row-start: 3;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+@media (min-width: 1024px) {
+  #customTextModal .ctSeparator {
+    display: none;
+  }
+  #customTextModal .ctMain {
+    grid-row-start: 1;
+    grid-column-start: 1;
+  }
+}
+
+#customTextModal .ctTopButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+#customTextModal textarea.input {
+  display: block;
+  width: 100%;
+  min-height: min(45.625rem, calc(100vh - 14rem));
+  padding: 1rem;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  resize: vertical;
+  border-radius: var(--roundness);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sub-color) transparent;
+}
+
+#customTextModal .ctSide {
+  display: grid;
+  gap: 1rem;
+  height: min-content;
+  font-size: 0.75rem;
+  line-height: 1.25;
+}
+
+#customTextModal .ctSide .button {
+  font-size: 0.75rem;
+}
+
+#customTextModal .ctSection {
+  display: grid;
+  width: 100%;
+}
+
+#customTextModal .ctSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--sub-color);
+  text-transform: lowercase;
+}
+
+#customTextModal .ctSectionDesc {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--text-color);
+}
+
+#customTextModal .ctSectionButtons {
+  display: flex;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+#customTextModal .ctSectionButtons .button {
+  flex: 1;
+}
+
+#customTextModal .ctStack {
+  display: grid;
+  gap: 0.5rem;
+}
+
+#customTextModal .ctEmpty {
+  color: var(--sub-color);
+}
+
+#customTextModal .ctSavedList {
+  display: grid;
+  gap: 0.5rem;
+  max-height: 40rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sub-color) transparent;
+}
+
+#customTextModal .ctSavedItem {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+#customTextModal .ctSavedName {
+  justify-content: flex-start;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#customTextModal .ctSavedDelete {
+  aspect-ratio: 1;
+}
+
+@keyframes mfModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes mfModalFadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes mfModalIn {
+  from {
+    opacity: 0;
+    margin-top: 1rem;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+
+@keyframes mfModalOut {
+  from {
+    opacity: 1;
+    margin-top: 0;
+  }
+  to {
+    opacity: 0;
+    margin-top: 1rem;
+  }
+}

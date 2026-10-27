@@ -41,13 +41,13 @@ function TestView() {
   }, [modalOpen, testId]);
 
   useEffect(() => {
-    if (focused) {
+    if (focused || modalOpen) {
       setBlurred(false);
       return;
     }
     const id = window.setTimeout(() => setBlurred(true), 1000);
     return () => clearTimeout(id);
-  }, [focused]);
+  }, [focused, modalOpen]);
 
   return (
     <div id="typingTest" onClick={() => inputRef.current?.focus()}>

@@ -1,3 +1,4 @@
+import { create } from "zustand";
 import { useConfig, type Config, type Engine, type LiveStat, type Mode } from "../store/config";
 import { useTest } from "../store/test";
 import { useUi, type Page } from "../store/ui";
@@ -45,6 +46,9 @@ export interface CommandRow {
   command: Command;
   parent?: CommandGroup;
 }
+
+/** Name of the theme the command line is currently live-previewing (null when not previewing). */
+export const usePreviewTheme = create<{ name: string | null }>(() => ({ name: null }));
 
 const cfg = () => useConfig.getState();
 const restart = () => useTest.getState().newTest();
@@ -417,23 +421,24 @@ export function stripEllipsis(title: string): string {
   return title.replace(/\.\.\.$/, "");
 }
 
-function searchText(row: CommandRow): string {
+function displayText(row: CommandRow): string {
   const c = row.command;
-  const base = row.parent ? `${stripEllipsis(row.parent.title)} ${c.display}` : c.display;
-  return `${base} ${c.alias ?? ""}`.toLowerCase();
+  return (row.parent ? `${stripEllipsis(row.parent.title)} ${c.display}` : c.display).toLowerCase();
 }
 
 /**
  * Monkeytype-style matching: every word of the query has to match a word of the command
- * (prefix match). Longer query words also match anywhere inside the text, which keeps
- * typos like "unct" or mid-word fragments useful without flooding short queries.
+ * (prefix match). Longer query words also match anywhere inside the text and against the
+ * command's aliases, which keeps fragments useful without flooding one-letter queries.
  */
-function score(haystack: string, queryWords: string[]): number {
-  const words = haystack.split(/\s+/);
+function score(display: string, alias: string, queryWords: string[]): number {
+  const words = display.split(/\s+/);
+  const aliasWords = alias ? alias.split(/\s+/) : [];
   let total = 0;
   for (const q of queryWords) {
-    if (words.some((w) => w.startsWith(q))) total += 2;
-    else if (q.length >= 3 && haystack.includes(q)) total += 1;
+    if (words.some((w) => w.startsWith(q))) total += 3;
+    else if (q.length >= 2 && aliasWords.some((w) => w.startsWith(q))) total += 2;
+    else if (q.length >= 3 && (display.includes(q) || alias.includes(q))) total += 1;
     else return 0;
   }
   return total;
@@ -444,7 +449,7 @@ export function filterRows(rows: CommandRow[], query: string): CommandRow[] {
   if (queryWords.length === 0) return rows;
   const scored: { row: CommandRow; s: number; i: number }[] = [];
   rows.forEach((row, i) => {
-    const s = score(searchText(row), queryWords);
+    const s = score(displayText(row), (row.command.alias ?? "").toLowerCase(), queryWords);
     if (s > 0) scored.push({ row, s, i });
   });
   scored.sort((a, b) => b.s - a.s || a.i - b.i);
