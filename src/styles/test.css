@@ -252,12 +252,6 @@
   margin-inline: auto;
 }
 
-#micButton {
-  position: absolute;
-  right: 100%;
-  top: 0;
-}
-
 .testButtons .textButton {
   padding: 1rem 2rem;
   font-size: 1rem;
