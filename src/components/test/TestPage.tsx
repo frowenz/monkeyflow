@@ -105,7 +105,7 @@ export function TestPage() {
 
   return (
     <main className={`page pageTest ${finished ? "showingResult" : ""}`}>
-      {!finished && <TestConfig />}
+      {finished ? <div /> : <TestConfig />}
       {finished ? <ResultPage key={`r${testId}`} /> : <TestView key={`t${testId}`} />}
       <div />
     </main>

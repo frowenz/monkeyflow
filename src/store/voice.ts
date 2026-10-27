@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { MicMonitor } from "../lib/mic";
 import { normalizeWord } from "../lib/normalize";
-import { isSpeechSupported, Recognizer, type RecognizerState } from "../lib/speech";
+import { isSpeechSupported, Recognizer, type RecognizerEvents, type RecognizerState } from "../lib/speech";
 import { getConfig, useConfig } from "./config";
 import { useTest } from "./test";
 import { notify } from "./ui";
@@ -47,7 +47,7 @@ function handleCommand(text: string): void {
   }
 }
 
-const recognizer = new Recognizer({
+const recognizerHandlers: RecognizerEvents = {
   onInterim: (text) => {
     const test = useTest.getState();
     if (test.status === "finished") {
@@ -73,7 +73,9 @@ const recognizer = new Recognizer({
   onActivity: () => {
     useTest.getState().noteVoiceActivity(performance.now());
   },
-});
+};
+
+const recognizer = new Recognizer(recognizerHandlers);
 
 let lastActivityPush = 0;
 const mic = new MicMonitor({
@@ -126,6 +128,92 @@ export function stopListening(): void {
 export function toggleListening(): void {
   if (useVoice.getState().listening) stopListening();
   else void startListening();
+}
+
+/** Feeds text through the same path as live recognition (interim words, then finals). */
+async function simulateSpeech(text: string, wpm = 170): Promise<void> {
+  const words = text.split(/\s+/).filter(Boolean);
+  const msPerWord = 60000 / wpm;
+  const handlers = recognizerHandlers;
+  useTest.getState().noteVoiceStart(performance.now());
+  let pending: string[] = [];
+  for (let i = 0; i < words.length; i++) {
+    pending.push(words[i]);
+    handlers.onInterim(pending.join(" "));
+    handlers.onActivity();
+    await new Promise((r) => setTimeout(r, msPerWord));
+    if (pending.length >= 4 + Math.floor(Math.random() * 4) || i === words.length - 1) {
+      handlers.onFinal(pending.join(" "));
+      handlers.onInterim("");
+      pending = [];
+    }
+  }
+}
+
+declare global {
+  interface Window {
+    monkeyflow?: {
+      speak: (text: string, wpm?: number) => Promise<void>;
+      speakTest: (wpm?: number, accuracy?: number) => Promise<void>;
+      state: () => unknown;
+    };
+  }
+}
+
+async function withSimulatedMic<T>(fn: () => Promise<T>): Promise<T> {
+  useVoice.setState({ listening: true, recognizer: "listening" });
+  let level = 0.4;
+  const id = window.setInterval(() => {
+    level = Math.min(0.95, Math.max(0.15, level + (Math.random() - 0.5) * 0.35));
+    levelListeners.forEach((cb) => cb(level));
+  }, 60);
+  try {
+    return await fn();
+  } finally {
+    clearInterval(id);
+    levelListeners.forEach((cb) => cb(0));
+  }
+}
+
+window.monkeyflow = {
+  speak: (text, wpm) => withSimulatedMic(() => simulateSpeech(text, wpm)),
+  speakTest: (wpm, accuracy) => withSimulatedMic(() => speakTest(wpm, accuracy)),
+  state: () => {
+    const s = useTest.getState();
+    return {
+      status: s.status,
+      inputText: s.inputText,
+      interimText: s.interimText,
+      words: s.targets.map((t, i) => [t, s.alignment.words[i]?.status ?? "-", s.alignment.words[i]?.input ?? ""]),
+      extras: s.alignment.extras,
+      result: s.result && { wpm: s.result.wpm, acc: s.result.acc, time: s.result.time },
+    };
+  },
+};
+
+async function speakTest(wpm = 170, accuracy = 0.97): Promise<void> {
+  const testId = useTest.getState().testId;
+  const msPerWord = 60000 / wpm;
+  useTest.getState().noteVoiceStart(performance.now());
+  let index = useTest.getState().alignment.caretWord;
+  let pending: string[] = [];
+  while (useTest.getState().testId === testId && useTest.getState().status !== "finished") {
+    const targets = useTest.getState().targets;
+    const target = targets[index++];
+    if (target === undefined) break;
+    const roll = Math.random();
+    if (roll <= accuracy) pending.push(target);
+    else if (roll > accuracy + (1 - accuracy) / 2) pending.push(targets[(index * 7) % targets.length]);
+    recognizerHandlers.onInterim(pending.join(" "));
+    recognizerHandlers.onActivity();
+    await new Promise((r) => setTimeout(r, msPerWord * (0.75 + Math.random() * 0.5)));
+    if (pending.length >= 4 + Math.floor(Math.random() * 4)) {
+      recognizerHandlers.onFinal(pending.join(" "));
+      recognizerHandlers.onInterim("");
+      pending = [];
+    }
+  }
+  if (pending.length && useTest.getState().testId === testId) recognizerHandlers.onFinal(pending.join(" "));
 }
 
 let lastTestId = useTest.getState().testId;

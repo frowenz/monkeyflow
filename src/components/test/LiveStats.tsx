@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { useConfig } from "../../store/config";
 import { currentAcc, currentWpm, useTest } from "../../store/test";
 
+function secondsToString(total: number): string {
+  if (total < 60) return String(total);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 export function LiveStats() {
   const status = useTest((s) => s.status);
   const elapsed = useTest((s) => s.elapsed);
@@ -28,8 +35,8 @@ export function LiveStats() {
   }, [status]);
 
   let timerText = "";
-  if (mode === "time") timerText = String(Math.max(0, Math.ceil(time - elapsed)));
-  else if (mode === "zen") timerText = String(Math.floor(elapsed));
+  if (mode === "time") timerText = secondsToString(Math.max(0, Math.ceil(time - elapsed)));
+  else if (mode === "zen") timerText = String(caretWord);
   else timerText = `${Math.min(caretWord, total)}/${total}`;
 
   const visible = status === "active";

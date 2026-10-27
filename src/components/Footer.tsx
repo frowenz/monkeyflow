@@ -22,7 +22,7 @@ export function Footer() {
     <footer id="footer">
       <div className="keyTips">
         <div>
-          <kbd>tab</kbd> + <kbd>enter</kbd>
+          <kbd>tab &gt; enter</kbd>
           <span>- restart test</span>
         </div>
         {page === "test" && (

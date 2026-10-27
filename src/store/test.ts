@@ -12,7 +12,7 @@ import {
   type CharCounts,
 } from "../lib/stats";
 import { wordsMatch } from "../lib/normalize";
-import { randomQuote, splitText, WordGenerator, type Quote } from "../lib/words";
+import { QUOTES, randomQuote, splitText, WordGenerator, type Quote } from "../lib/words";
 import { getConfig, type Engine, type Mode } from "./config";
 
 export type TestStatus = "idle" | "active" | "finished";
@@ -69,7 +69,8 @@ interface TestState {
   pendingStartAt: number | null;
   lastVoiceAt: number;
 
-  newTest: (opts?: { repeat?: boolean }) => void;
+  /** `quoteId` forces a specific quote (caller should switch mode to "quote" first). */
+  newTest: (opts?: { repeat?: boolean; quoteId?: number }) => void;
   setInput: (text: string) => void;
   commitSpeech: (text: string) => void;
   setInterim: (text: string) => void;
@@ -256,7 +257,11 @@ export const useTest = create<TestState>((set, get) => {
       const prev = get();
       let targets: string[];
       let quote: Quote | null;
-      if (opts?.repeat && prev.targets.length && getConfig().mode !== "time" && getConfig().mode !== "zen") {
+      const forced = opts?.quoteId !== undefined ? QUOTES.find((q) => q.id === opts.quoteId) : undefined;
+      if (forced) {
+        targets = splitText(forced.text);
+        quote = forced;
+      } else if (opts?.repeat && prev.targets.length && getConfig().mode !== "time" && getConfig().mode !== "zen") {
         targets = prev.result ? prev.result.words.map((w) => w.target) : prev.targets;
         quote = prev.quote;
       } else {
