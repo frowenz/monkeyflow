@@ -205,6 +205,37 @@ const GROUPS: GroupSpec[] = [
         keywords: "animation",
         control: <OptionButtons setting="smoothCaret" options={OFF_ON} />,
       },
+      {
+        id: "paceCaret",
+        icon: "fas fa-tachometer-alt",
+        title: "pace caret",
+        description:
+          "Displays a second caret that moves at a constant speed. 'pb' races your personal best for the current mode; 'custom' moves at the speed you pick below. Challenge links always race the challenger.",
+        keywords: "ghost race pb personal best",
+        control: (
+          <OptionButtons
+            setting="paceCaret"
+            options={[
+              { value: "off", label: "off" },
+              { value: "pb", label: "pb" },
+              { value: "custom", label: "custom" },
+            ]}
+          />
+        ),
+      },
+      {
+        id: "paceCaretWpm",
+        icon: "fas fa-tachometer-alt",
+        title: "custom pace",
+        description: "Speed of the pace caret when it's set to custom.",
+        keywords: "ghost race wpm",
+        control: (
+          <OptionButtons
+            setting="paceCaretWpm"
+            options={[100, 150, 200, 250, 300].map((w) => ({ value: w, label: String(w) }))}
+          />
+        ),
+      },
     ],
   },
   {

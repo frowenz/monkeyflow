@@ -79,6 +79,8 @@ interface TestState {
   lastVoiceAt: number;
   /** Wispr Flow (or another dictation app) is doing the transcription this session. */
   dictation: boolean;
+  /** Pace caret speed forced for this test (e.g. a challenger's wpm); cleared by newTest. */
+  paceOverride: number | null;
   usedSpeech: boolean;
   usedDictation: boolean;
 
@@ -88,6 +90,7 @@ interface TestState {
   commitSpeech: (text: string) => void;
   clearSpeech: () => void;
   setDictation: (on: boolean) => void;
+  setPaceOverride: (wpm: number | null) => void;
   setInterim: (text: string) => void;
   noteVoiceStart: (at: number) => void;
   noteVoiceActivity: (at: number) => void;
@@ -134,6 +137,21 @@ function buildTargets(prevQuote: Quote | null, seed: number): { targets: string[
 
 function pbKey(r: Pick<TestResult, "mode" | "mode2" | "language" | "punctuation" | "numbers" | "engine">) {
   return `${r.mode}|${r.mode2}|${r.language}|${r.punctuation ? 1 : 0}|${r.numbers ? 1 : 0}|${r.engine}`;
+}
+
+/** Best wpm for a test configuration across voice/keyboard engines (drives the pb pace caret). */
+export function bestPbFor(c: { mode: Mode; mode2: string; language: string; punctuation: boolean; numbers: boolean }): number | null {
+  const pbs = loadPbs();
+  let best: number | null = null;
+  for (const engine of ["builtin", "flow", "keyboard"] as const) {
+    const v = pbs[pbKey({ ...c, engine })];
+    if (v !== undefined && (best === null || v > best)) best = v;
+  }
+  return best;
+}
+
+export function currentModeTwo(): string {
+  return modeTwo();
 }
 
 function loadPbs(): Record<string, number> {
@@ -287,6 +305,7 @@ export const useTest = create<TestState>((set, get) => {
     firstVoiceAt: null,
     lastVoiceAt: 0,
     dictation: false,
+    paceOverride: null,
     usedSpeech: false,
     usedDictation: false,
 
@@ -327,6 +346,7 @@ export const useTest = create<TestState>((set, get) => {
         lastVoiceAt: 0,
         usedSpeech: false,
         usedDictation: false,
+        paceOverride: null,
       });
     },
 
@@ -352,6 +372,8 @@ export const useTest = create<TestState>((set, get) => {
     },
 
     setDictation: (on) => set({ dictation: on }),
+
+    setPaceOverride: (wpm) => set({ paceOverride: wpm }),
 
     setInterim: (text) => {
       const s = get();

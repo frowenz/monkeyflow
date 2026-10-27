@@ -3,7 +3,7 @@ import type { WordResult } from "../../lib/align";
 import { normalizeWord, similarity, wordsMatch } from "../../lib/normalize";
 import { useConfig } from "../../store/config";
 import { subscribeLevel, useVoice } from "../../store/voice";
-import { useTest } from "../../store/test";
+import { bestPbFor, currentModeTwo, useTest } from "../../store/test";
 
 const RENDER_AHEAD = 120;
 
@@ -95,6 +95,19 @@ function useRevealedWord(target: number, testId: number): number {
   return Math.min(shown, target);
 }
 
+function usePaceWpm(): number | null {
+  const override = useTest((s) => s.paceOverride);
+  const testId = useTest((s) => s.testId);
+  const { paceCaret, paceCaretWpm, mode, language, punctuation, numbers } = useConfig();
+  const [pb, setPb] = useState<number | null>(null);
+  useEffect(() => {
+    setPb(paceCaret === "pb" ? bestPbFor({ mode, mode2: currentModeTwo(), language: language.replace("_", " "), punctuation, numbers }) : null);
+  }, [paceCaret, mode, language, punctuation, numbers, testId]);
+  if (override) return override;
+  if (paceCaret === "custom") return paceCaretWpm;
+  return pb;
+}
+
 export function Words({ blurred }: { blurred: boolean }) {
   const targets = useTest((s) => s.targets);
   const alignment = useTest((s) => s.alignment);
@@ -108,6 +121,8 @@ export function Words({ blurred }: { blurred: boolean }) {
 
   const wordsRef = useRef<HTMLDivElement>(null);
   const caretRef = useRef<HTMLDivElement>(null);
+  const paceRef = useRef<HTMLDivElement>(null);
+  const paceWpm = usePaceWpm();
   const listening = useVoice((s) => s.listening);
 
   useEffect(
@@ -121,6 +136,49 @@ export function Words({ blurred }: { blurred: boolean }) {
   const [scrollLines, setScrollLines] = useState(0);
   const [lineStep, setLineStep] = useState(51);
   const [noTransition, setNoTransition] = useState(true);
+  const scrollRef = useRef({ lines: 0, step: 51 });
+  scrollRef.current = { lines: scrollLines, step: lineStep };
+
+  useEffect(() => {
+    const el = paceRef.current;
+    if (!el) return;
+    if (status !== "active" || !paceWpm) {
+      el.style.opacity = "0";
+      return;
+    }
+    let raf = 0;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const s = useTest.getState();
+      const container = wordsRef.current;
+      if (s.startTime === null || !container) return;
+      let chars = ((paceWpm * 5) / 60) * ((performance.now() - s.startTime) / 1000);
+      let i = 0;
+      while (i < s.targets.length && chars >= s.targets[i].length + 1) {
+        chars -= s.targets[i].length + 1;
+        i++;
+      }
+      const wordEl = container.children[i] as HTMLElement | undefined;
+      if (!wordEl) {
+        el.style.opacity = "0";
+        return;
+      }
+      const letters = wordEl.children as HTMLCollectionOf<HTMLElement>;
+      const li = Math.min(Math.floor(chars), letters.length);
+      const ref = letters[Math.min(li, letters.length - 1)];
+      if (!ref) return;
+      const left = wordEl.offsetLeft + ref.offsetLeft + (li >= letters.length ? ref.offsetWidth : 0);
+      const fontSize = parseFloat(getComputedStyle(container).fontSize);
+      const { lines, step } = scrollRef.current;
+      const top = wordEl.offsetTop + ref.offsetTop - lines * step + (ref.offsetHeight - fontSize * 1.2) / 2;
+      const visible = top > -step / 2 && top < step * 2.5;
+      el.style.opacity = visible ? "1" : "0";
+      el.style.height = `${fontSize * 1.2}px`;
+      el.style.transform = `translate(${left - fontSize * 0.05}px, ${top}px)`;
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [status, paceWpm, testId]);
 
   const caretWord = useRevealedWord(alignment.caretWord, testId);
   const caretLetter = caretWord === alignment.caretWord ? alignment.caretLetter : 0;
@@ -186,6 +244,7 @@ export function Words({ blurred }: { blurred: boolean }) {
 
   return (
     <div id="wordsWrapper" style={{ height: lineStep * 3 }} className={blurred ? "blurred" : ""}>
+      <div id="paceCaret" ref={paceRef} />
       <div
         id="caret"
         ref={caretRef}

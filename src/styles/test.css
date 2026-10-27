@@ -200,6 +200,20 @@
   box-shadow: 0 0 calc(var(--level) * 0.45em) calc(var(--level) * 0.06em) var(--caret-color);
 }
 
+#paceCaret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0.1em;
+  font-size: 2rem;
+  background: var(--sub-color);
+  border-radius: var(--roundness);
+  opacity: 0;
+  transition: transform 0.1s linear, opacity 0.2s;
+  pointer-events: none;
+  z-index: 0;
+}
+
 @keyframes caretFlashSmooth {
   0%,
   to {

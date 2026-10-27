@@ -5,6 +5,7 @@ import type { Language, QuoteLength } from "../lib/words";
 export type Mode = "time" | "words" | "quote" | "zen" | "custom";
 export type Engine = "builtin" | "flow";
 export type LiveStat = "off" | "mini" | "text";
+export type PaceCaret = "off" | "pb" | "custom";
 
 export interface Config {
   mode: Mode;
@@ -18,6 +19,8 @@ export interface Config {
   theme: string;
   strictness: MatchStrictness;
   smoothCaret: boolean;
+  paceCaret: PaceCaret;
+  paceCaretWpm: number;
   smoothLineScroll: boolean;
   liveSpeed: LiveStat;
   liveAcc: LiveStat;
@@ -43,6 +46,8 @@ export const DEFAULT_CONFIG: Config = {
   theme: "serika dark",
   strictness: "lenient",
   smoothCaret: true,
+  paceCaret: "off",
+  paceCaretWpm: 150,
   smoothLineScroll: true,
   liveSpeed: "off",
   liveAcc: "off",

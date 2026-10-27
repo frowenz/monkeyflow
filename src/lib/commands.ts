@@ -368,6 +368,23 @@ export function rootGroup(): CommandGroup {
         alias: "start stop listening voice mic",
         exec: () => toggleListening(),
       },
+      sub("paceCaret", "Pace caret...", "fa-tachometer-alt", () =>
+        choiceGroup("paceCaret", "Pace caret...", "fa-tachometer-alt", "paceCaret", [
+          { value: "off", display: "off" },
+          { value: "pb", display: "pb", alias: "personal best ghost race" },
+          { value: "custom", display: "custom", alias: "ghost race wpm" },
+        ]),
+      ),
+      sub("paceCaretWpm", "Pace caret speed...", "fa-tachometer-alt", () =>
+        choiceGroup(
+          "paceCaretWpm",
+          "Pace caret speed...",
+          "fa-tachometer-alt",
+          "paceCaretWpm",
+          [100, 150, 200, 250, 300].map((w) => ({ value: w, display: `${w} wpm` })),
+          { extraPatch: { paceCaret: "custom" } },
+        ),
+      ),
       sub("smoothCaret", "Smooth caret...", "fa-i-cursor", () =>
         onOffGroup("smoothCaret", "Smooth caret...", "fa-i-cursor", "smoothCaret"),
       ),
