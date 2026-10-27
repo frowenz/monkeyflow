@@ -20,8 +20,11 @@ export function getTheme(name: string): Theme {
   return THEMES.find((t) => t.name === name) ?? THEMES[0];
 }
 
+let currentThemeName = THEMES[0].name;
+
 export function applyTheme(name: string): void {
   const t = getTheme(name);
+  currentThemeName = t.name;
   const root = document.documentElement.style;
   root.setProperty("--bg-color", t.bg);
   root.setProperty("--main-color", t.main);
@@ -38,14 +41,23 @@ export function applyTheme(name: string): void {
   updateFavicon(t);
 }
 
+let faviconTemplate: Promise<string | null> | null = null;
+
+/** Recolors public/favicon.svg (authored in serika dark) to match the active theme. */
 export function updateFavicon(t: Theme): void {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="${t.bg}"/><text x="32" y="44" font-family="monospace" font-size="34" text-anchor="middle" fill="${t.main}">mf</text></svg>`;
-  let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
-  if (!link) {
-    link = document.createElement("link");
-    link.rel = "icon";
-    document.head.appendChild(link);
-  }
-  link.type = "image/svg+xml";
-  link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  faviconTemplate ??= fetch("/favicon.svg")
+    .then((r) => (r.ok ? r.text() : null))
+    .catch(() => null);
+  void faviconTemplate.then((template) => {
+    if (!template || getTheme(currentThemeName).name !== t.name) return;
+    const svg = template.replaceAll("#323437", t.bg).replaceAll("#e2b714", t.main);
+    let link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.prepend(link);
+    }
+    link.type = "image/svg+xml";
+    link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  });
 }
