@@ -79,6 +79,7 @@ export function tokenize(
   return tokens;
 }
 
+const BAND = 32;
 const MATCH = 3;
 const MATCH_LOOSE = 2.6;
 const PARTIAL_PREFIX = 1;
@@ -177,6 +178,9 @@ export function align(
     }
   }
 
+  // Only search a band around where the speaker is (the previous row's best column): with
+  // sequential scoring the path never strays far from it, and this keeps long tests O(m).
+  let center = 0;
   for (let i = 1; i <= m; i++) {
     const tok = tokens[i - 1];
     const row = i * W;
@@ -196,7 +200,11 @@ export function align(
       stampAll(tripleIndex!, tokKeys, split3Stamp, i);
     }
 
-    for (let j = 0; j <= n; j++) {
+    const jLo = Math.max(0, center - BAND);
+    const jHi = Math.min(n, center + BAND + 3);
+    let rowBest = -Infinity;
+    let rowBestJ = jLo;
+    for (let j = jLo; j <= jHi; j++) {
       let best = -Infinity;
       let bestOp = OP_NONE;
 
@@ -293,7 +301,12 @@ export function align(
 
       dp[row + j] = best;
       op[row + j] = bestOp;
+      if (best > rowBest) {
+        rowBest = best;
+        rowBestJ = j;
+      }
     }
+    center = rowBestJ;
   }
 
   // Ties at the free end come from a trailing unmatched token (an extra vs. a wrong guess at the
