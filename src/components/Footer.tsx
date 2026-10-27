@@ -22,6 +22,7 @@ export function Footer() {
   const previewTheme = usePreviewTheme((s) => s.name);
   const theme = previewTheme ?? configTheme;
   const page = useUi((s) => s.page);
+  const mode = useConfig((s) => s.mode);
   const finished = useTest((s) => s.status === "finished");
   const showMicHint = page === "test" && !finished && !isTouchDevice();
 
@@ -36,6 +37,12 @@ export function Footer() {
           <div>
             <kbd>enter</kbd>
             <span>- start / stop listening</span>
+          </div>
+        )}
+        {page === "test" && mode === "zen" && !finished && (
+          <div>
+            <kbd>shift + enter</kbd>
+            <span>- finish zen</span>
           </div>
         )}
         <div>

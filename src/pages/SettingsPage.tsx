@@ -180,6 +180,7 @@ const GROUPS: GroupSpec[] = [
             options={[
               { value: "english", label: "english" },
               { value: "english_1k", label: "english 1k" },
+              { value: "tongue_twisters", label: "tongue twisters" },
             ]}
           />
         ),

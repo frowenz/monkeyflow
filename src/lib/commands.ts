@@ -245,6 +245,7 @@ const languageGroup = (): CommandGroup =>
     [
       { value: "english" as Language, display: "english" },
       { value: "english_1k" as Language, display: "english 1k" },
+      { value: "tongue_twisters" as Language, display: "tongue twisters", alias: "twister peter piper seashells" },
     ],
     { restart: true },
   );

@@ -163,6 +163,8 @@ const MIC_KEY = "monkeyflow-mic";
 
 export function toggleListening(): void {
   if (useVoice.getState().listening) {
+    const test = useTest.getState();
+    if (getConfig().mode === "zen" && test.status === "active") test.finish();
     stopListening();
     localStorage.removeItem(MIC_KEY);
   } else {

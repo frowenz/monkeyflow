@@ -1,6 +1,7 @@
 import english from "../data/english.json";
 import english1k from "../data/english_1k.json";
 import quotesData from "../data/quotes.json";
+import twistersData from "../data/tongue_twisters.json";
 
 export interface Quote {
   id: number;
@@ -10,9 +11,11 @@ export interface Quote {
 }
 
 export type QuoteLength = "all" | "short" | "medium" | "long" | "thicc";
-export type Language = "english" | "english_1k";
+export type Language = "english" | "english_1k" | "tongue_twisters";
 
-const LISTS: Record<Language, string[]> = {
+const TWISTERS: string[] = (twistersData as { twisters: string[] }).twisters;
+
+const LISTS: Record<Exclude<Language, "tongue_twisters">, string[]> = {
   english: (english as { words: string[] }).words,
   english_1k: (english1k as { words: string[] }).words,
 };
@@ -79,7 +82,11 @@ export class WordGenerator {
     this.rng = rng;
   }
 
+  private twisterQueue: string[] = [];
+  private lastTwister = -1;
+
   next(): string {
+    if (this.opts.language === "tongue_twisters") return this.nextTwisterWord();
     const list = LISTS[this.opts.language];
     let word = pick(list, this.rng);
     let guard = 0;
@@ -92,6 +99,20 @@ export class WordGenerator {
     }
     if (this.opts.punctuation) word = this.punctuate(word);
     return word;
+  }
+
+  /** Tongue twisters are read whole, in order, one random twister after another. */
+  private nextTwisterWord(): string {
+    if (this.twisterQueue.length === 0) {
+      let idx = Math.floor(this.rng() * TWISTERS.length);
+      if (idx === this.lastTwister) idx = (idx + 1) % TWISTERS.length;
+      this.lastTwister = idx;
+      const words = TWISTERS[idx].split(/\s+/);
+      this.twisterQueue = this.opts.punctuation
+        ? words
+        : words.map((w) => w.toLowerCase().replace(/[^a-z0-9']/g, "")).filter(Boolean);
+    }
+    return this.twisterQueue.shift()!;
   }
 
   take(count: number): string[] {

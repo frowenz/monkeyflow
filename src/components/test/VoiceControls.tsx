@@ -53,7 +53,7 @@ export function VoiceControls() {
   const listening = useVoice((s) => s.listening);
   const blocked = useVoice((s) => s.blocked);
   const supported = useVoice((s) => s.supported);
-  const showTranscript = useConfig((s) => s.showTranscript);
+  const showTranscript = useConfig((s) => s.showTranscript && s.mode !== "zen");
 
   const heard = speechText.split(/\s+/).slice(-12).join(" ");
 
