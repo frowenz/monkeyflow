@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useConfig, type Engine, type Mode } from "../store/config";
+import { useConfig, type Mode } from "../store/config";
 import { useTest } from "../store/test";
 import { useUi } from "../store/ui";
 import type { QuoteLength } from "../lib/words";
@@ -53,20 +53,6 @@ export function TestConfig() {
   const c = useConfig();
   const focus = useUi((s) => s.focus);
 
-  const engineBtn = (engine: Engine, icon: string, text: string, label: string) => (
-    <Btn
-      active={c.engine === engine}
-      icon={icon}
-      label={label}
-      onClick={() => {
-        c.set("engine", engine);
-        useTest.getState().newTest();
-      }}
-    >
-      {text}
-    </Btn>
-  );
-
   const showPunctuation = c.mode === "time" || c.mode === "words";
 
   return (
@@ -81,21 +67,16 @@ export function TestConfig() {
         test settings
       </button>
       <div className="cardWrap left">
-        <div className="card">
-          {engineBtn("builtin", "fas fa-microphone", "built-in", "use your browser's speech recognition")}
-          {engineBtn("flow", "fas fa-wind", "flow", "dictate with Wispr Flow (or any dictation app)")}
-          {showPunctuation && (
-            <>
-              <div className="spacer" />
-              <Btn active={c.punctuation} icon="fas fa-at" onClick={() => restartWith({ punctuation: !c.punctuation })}>
-                punctuation
-              </Btn>
-              <Btn active={c.numbers} icon="fas fa-hashtag" onClick={() => restartWith({ numbers: !c.numbers })}>
-                numbers
-              </Btn>
-            </>
-          )}
-        </div>
+        {showPunctuation && (
+          <div className="card">
+            <Btn active={c.punctuation} icon="fas fa-at" onClick={() => restartWith({ punctuation: !c.punctuation })}>
+              punctuation
+            </Btn>
+            <Btn active={c.numbers} icon="fas fa-hashtag" onClick={() => restartWith({ numbers: !c.numbers })}>
+              numbers
+            </Btn>
+          </div>
+        )}
       </div>
 
       <div className="cardWrap center">

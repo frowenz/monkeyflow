@@ -256,7 +256,7 @@ const engineGroup = (): CommandGroup =>
     "fa-microphone",
     "engine",
     [
-      { value: "builtin" as Engine, display: "built-in", alias: "browser web speech chrome" },
+      { value: "builtin" as Engine, display: "auto", alias: "built-in browser web speech chrome" },
       { value: "flow" as Engine, display: "wispr flow", alias: "dictation" },
     ],
     { restart: true },

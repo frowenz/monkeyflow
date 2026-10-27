@@ -92,31 +92,49 @@ const mic = new MicMonitor({
 
 export async function startListening(): Promise<void> {
   const { engine, speechLang } = getConfig();
-  if (engine === "builtin" && !isSpeechSupported()) {
+  const builtin = engine === "builtin" && isSpeechSupported();
+  if (engine === "builtin" && !builtin) {
     notify(
-      "Built-in speech recognition isn't available in this browser. Use Chrome, Edge or Safari, or switch to flow mode and dictate with Wispr Flow.",
-      "error",
+      "This browser has no built-in speech recognition. Dictate with Wispr Flow (or use Chrome, Edge or Safari) - your mic will keep time.",
+      "notice",
     );
-    return;
   }
+  useTest.getState().setDictation(!builtin);
   useVoice.setState({ listening: true });
+  if (builtin) {
+    recognizer.lang = speechLang;
+    recognizer.start();
+  }
   try {
     await mic.start();
     useVoice.setState({ micReady: true });
   } catch {
     useVoice.setState({ micReady: false });
-    if (engine === "flow") {
+    if (!builtin) {
       notify("Couldn't access the microphone, so the timer will start when text arrives.", "notice");
     }
   }
-  if (!useVoice.getState().listening) {
-    mic.stop();
-    return;
-  }
-  if (engine === "builtin") {
-    recognizer.lang = speechLang;
-    recognizer.start();
-  }
+  if (!useVoice.getState().listening) mic.stop();
+}
+
+let dictationNoticeShown = false;
+
+/** Text was pasted into the test by a dictation app: let it own transcription, keep the mic for timing. */
+export function onDictationDetected(): void {
+  const test = useTest.getState();
+  if (test.dictation) return;
+  test.setDictation(true);
+  const wasTranscribing = recognizer.active;
+  if (wasTranscribing) recognizer.stop();
+  test.clearSpeech();
+  if (dictationNoticeShown) return;
+  dictationNoticeShown = true;
+  notify(
+    useVoice.getState().listening
+      ? "Wispr Flow detected - it's doing the typing now, your mic just keeps time."
+      : "Wispr Flow detected. Turn on the mic so the timer starts when you start talking.",
+    "notice",
+  );
 }
 
 export function stopListening(): void {
@@ -125,9 +143,35 @@ export function stopListening(): void {
   useVoice.setState({ listening: false, recognizer: "off", micReady: false });
 }
 
+const MIC_KEY = "monkeyflow-mic";
+
 export function toggleListening(): void {
-  if (useVoice.getState().listening) stopListening();
-  else void startListening();
+  if (useVoice.getState().listening) {
+    stopListening();
+    localStorage.removeItem(MIC_KEY);
+  } else {
+    localStorage.setItem(MIC_KEY, "1");
+    void startListening();
+  }
+}
+
+/** Returning visitors who left the mic on get a warm recognizer before they start talking. */
+export async function resumeListeningIfAllowed(): Promise<void> {
+  if (localStorage.getItem(MIC_KEY) !== "1" || useVoice.getState().listening) return;
+  try {
+    const status = await navigator.permissions.query({ name: "microphone" as PermissionName });
+    if (status.state !== "granted") return;
+  } catch {
+    return;
+  }
+  await startListening();
+  const resume = () => {
+    mic.resumeAudio();
+    window.removeEventListener("pointerdown", resume);
+    window.removeEventListener("keydown", resume);
+  };
+  window.addEventListener("pointerdown", resume);
+  window.addEventListener("keydown", resume);
 }
 
 /** Feeds text through the same path as live recognition (interim words, then finals). */
@@ -187,6 +231,7 @@ window.monkeyflow = {
       words: s.targets.map((t, i) => [t, s.alignment.words[i]?.status ?? "-", s.alignment.words[i]?.input ?? ""]),
       extras: s.alignment.extras,
       result: s.result && { wpm: s.result.wpm, acc: s.result.acc, time: s.result.time },
+      recognizer: { active: recognizer.active, state: useVoice.getState().recognizer, log: recognizer.log.slice(-15) },
     };
   },
 };

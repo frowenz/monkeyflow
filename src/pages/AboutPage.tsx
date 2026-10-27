@@ -104,9 +104,9 @@ export function AboutPage() {
           how it works
         </h3>
         <p>
-          In built-in mode, Monkey Flow streams your browser's speech recognition and matches every word as you say it.
-          In flow mode, it works with Wispr Flow or any other dictation app: the app types into the test while your mic
-          is only used to time you. Either way, the words you spoke are aligned to the words on screen, so a dropped or
+          Turn on the mic and Monkey Flow streams your browser's speech recognition, matching every word as you say it.
+          Prefer Wispr Flow (or any other dictation app)? Just dictate into the test - it's detected automatically, the
+          app does the typing and your mic is only used to time you. Either way, the words you spoke are aligned to the words on screen, so a dropped or
           extra word doesn't derail the rest of the test. In lenient mode, homophones (there / their / they're) and
           spoken numbers ("four" for 4) count as correct.
         </p>
@@ -211,7 +211,7 @@ export function AboutPage() {
           affiliated with Monkeytype.
         </Credit>
         <Credit name="Wispr Flow" href="https://wisprflow.ai">
-          for voice dictation that types anywhere - pick the flow engine in the settings to use it.
+          for voice dictation that types anywhere - just dictate into the test and it's picked up automatically.
         </Credit>
         <Credit name="Your browser" href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API">
           for the built-in speech recognition behind the default voice engine.

@@ -10,6 +10,12 @@
       content="Monkeytype, but you talk. A minimalistic, customizable typing test where you speak the words instead of typing them - with your browser's speech recognition or Wispr Flow."
     />
 
+    <link rel="preload" href="/fonts/roboto-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/lexend-deca-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin />
+
     <!-- src/lib/themes.ts swaps the first link[rel="icon"] for a themed inline SVG at runtime -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
@@ -38,6 +44,12 @@
         background: var(--bg-color, #323437);
       }
     </style>
+    <script>
+      try {
+        var vars = JSON.parse(localStorage.getItem("monkeyflow-theme-vars") || "{}");
+        for (var k in vars) document.documentElement.style.setProperty(k, vars[k]);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

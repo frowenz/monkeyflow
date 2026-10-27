@@ -63,7 +63,7 @@ function testLabel(r: TestResult): string {
 }
 
 function testDetail(r: TestResult): string {
-  const parts = [r.engine === "flow" ? "wispr flow" : "built-in"];
+  const parts = [r.engine === "flow" ? "wispr flow" : r.engine === "keyboard" ? "keyboard" : "voice"];
   if (r.language && r.language !== "english") parts.push(r.language);
   if (r.punctuation) parts.push("punctuation");
   if (r.numbers) parts.push("numbers");

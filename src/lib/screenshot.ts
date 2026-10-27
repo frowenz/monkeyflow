@@ -1,4 +1,3 @@
-import { domToBlob } from "modern-screenshot";
 
 export interface CaptureOptions {
   backgroundColor: string;
@@ -10,7 +9,7 @@ export async function captureElement(el: HTMLElement, opts: CaptureOptions): Pro
   const pad = opts.padding ?? 32;
   const width = el.offsetWidth;
   const height = el.offsetHeight;
-  const blob = await domToBlob(el, {
+  const blob = await (await import("modern-screenshot")).domToBlob(el, {
     type: "image/png",
     backgroundColor: opts.backgroundColor,
     scale: Math.max(1, window.devicePixelRatio || 1),

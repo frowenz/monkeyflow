@@ -15,6 +15,11 @@ export function isSpeechSupported(): boolean {
   return typeof window !== "undefined" && getRecognitionCtor() !== null;
 }
 
+function splitWords(text: string): string[] {
+  const t = text.trim();
+  return t ? t.split(/\s+/) : [];
+}
+
 export type RecognizerState = "off" | "starting" | "listening";
 
 export interface RecognizerEvents {
@@ -39,6 +44,19 @@ export class Recognizer {
   private generation = 0;
   private restartTimer: number | null = null;
   private failures = 0;
+  /** Words heard this session (final + interim) as of the latest result event. */
+  private seenWords = 0;
+  /** Final words already passed to onFinal this session. */
+  private deliveredWords = 0;
+  /** Words heard before the last reset(); they belong to the previous test. */
+  private skipWords = 0;
+  /** Recent recognizer activity, exposed for debugging via window.monkeyflow.state(). */
+  readonly log: string[] = [];
+
+  private trace(entry: string) {
+    this.log.push(`${Math.round(performance.now())} ${entry}`);
+    if (this.log.length > 40) this.log.shift();
+  }
   lang = "en-US";
 
   private events: RecognizerEvents;
@@ -53,7 +71,7 @@ export class Recognizer {
 
   start(): void {
     if (!getRecognitionCtor()) {
-      this.events.onError("unsupported", "Your browser doesn't support built-in speech recognition. Try Chrome, Edge or Safari, or switch to flow mode.");
+      this.events.onError("unsupported", "Your browser doesn't support built-in speech recognition. Try Chrome, Edge or Safari, or dictate with Wispr Flow.");
       return;
     }
     this.wanted = true;
@@ -76,20 +94,16 @@ export class Recognizer {
     this.events.onState("off");
   }
 
-  /** Drops any in-flight hypothesis (e.g. on test restart) and keeps listening. */
+  /**
+   * Starts a fresh transcript (e.g. on test restart) without restarting the
+   * session, which would drop the first ~half second of speech. Results heard
+   * so far are ignored; words added later to the still-open result count.
+   */
   reset(): void {
+    this.trace(`reset wanted=${this.wanted} seen=${this.seenWords}`);
     if (!this.wanted) return;
-    this.generation++;
-    const rec = this.rec;
-    this.rec = null;
-    try {
-      rec?.abort();
-    } catch {
-      /* noop */
-    }
+    this.skipWords = this.seenWords;
     this.events.onInterim("");
-    this.clearRestart();
-    this.restartTimer = window.setTimeout(() => this.spawn(), 60);
   }
 
   private clearRestart() {
@@ -110,6 +124,9 @@ export class Recognizer {
     rec.lang = this.lang;
     rec.maxAlternatives = 1;
     this.rec = rec;
+    this.seenWords = 0;
+    this.deliveredWords = 0;
+    this.skipWords = 0;
     this.events.onState("starting");
 
     rec.onstart = () => {
@@ -117,20 +134,27 @@ export class Recognizer {
       this.events.onState("listening");
     };
 
+    // Chrome re-segments interim results as it finalizes them, so track progress
+    // by word counts across the whole session transcript rather than result indices.
     rec.onresult = (e: AnyRecognition) => {
       if (gen !== this.generation) return;
       this.failures = 0;
-      let interim = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
+      const finals: string[] = [];
+      const interims: string[] = [];
+      for (let i = 0; i < e.results.length; i++) {
         const result = e.results[i];
-        const transcript: string = result[0]?.transcript ?? "";
-        if (result.isFinal) {
-          if (transcript.trim()) this.events.onFinal(transcript.trim());
-        } else {
-          interim += transcript;
-        }
+        const text = (result[0]?.transcript ?? "").trim();
+        if (text) (result.isFinal ? finals : interims).push(text);
       }
-      this.events.onInterim(interim.trim());
+      const finalWords = splitWords(finals.join(" "));
+      const interimWords = splitWords(interims.join(" "));
+      this.seenWords = finalWords.length + interimWords.length;
+      const from = Math.max(this.deliveredWords, this.skipWords);
+      if (finalWords.length > from) this.events.onFinal(finalWords.slice(from).join(" "));
+      this.deliveredWords = Math.max(this.deliveredWords, finalWords.length);
+      const interim = interimWords.slice(Math.max(0, this.skipWords - finalWords.length)).join(" ");
+      this.trace(`result final=${finalWords.length} interim="${interim}" skip=${this.skipWords}`);
+      this.events.onInterim(interim);
       this.events.onActivity();
     };
 
@@ -153,6 +177,7 @@ export class Recognizer {
     };
 
     rec.onend = () => {
+      this.trace(`end gen=${gen}/${this.generation} wanted=${this.wanted}`);
       if (gen !== this.generation) return;
       this.events.onInterim("");
       if (this.wanted) {

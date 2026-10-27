@@ -35,7 +35,7 @@ export interface TestResult {
   punctuation: boolean;
   numbers: boolean;
   language: string;
-  engine: Engine;
+  engine: Engine | "keyboard";
   /** wpm and raw are cumulative averages; burst is smoothed per-second raw (monkeytype's "burst"). */
   chart: { wpm: number[]; raw: number[]; burst: number[]; err: number[]; labels: number[] };
   words: HistoryWord[];
@@ -58,7 +58,10 @@ interface TestState {
   testId: number;
   targets: string[];
   quote: Quote | null;
+  /** Textarea contents: keyboard typing and text pasted by dictation apps like Wispr Flow. */
   inputText: string;
+  /** Committed built-in speech recognition text. */
+  speechText: string;
   interimText: string;
   tokens: SpokenToken[];
   alignment: Alignment;
@@ -68,12 +71,20 @@ interface TestState {
   result: TestResult | null;
   /** Earliest plausible start of speech (voice activity onset), used to backdate the clock. */
   pendingStartAt: number | null;
+  /** Onset of the current utterance; dictation apps paste late, so the clock starts here. */
+  firstVoiceAt: number | null;
   lastVoiceAt: number;
+  /** Wispr Flow (or another dictation app) is doing the transcription this session. */
+  dictation: boolean;
+  usedSpeech: boolean;
+  usedDictation: boolean;
 
   /** `quoteId` forces a specific quote (caller should switch mode to "quote" first). */
   newTest: (opts?: { repeat?: boolean; quoteId?: number }) => void;
-  setInput: (text: string) => void;
+  setInput: (text: string, dictated?: boolean) => void;
   commitSpeech: (text: string) => void;
+  clearSpeech: () => void;
+  setDictation: (on: boolean) => void;
   setInterim: (text: string) => void;
   noteVoiceStart: (at: number) => void;
   noteVoiceActivity: (at: number) => void;
@@ -160,17 +171,16 @@ function stopTimer() {
 }
 
 export const useTest = create<TestState>((set, get) => {
-  const recompute = (inputText: string, interimText: string) => {
+  const recompute = (inputText: string, speechText: string, interimText: string) => {
     const c = getConfig();
     const state = get();
     if (state.status === "finished") return;
 
-    const committed = tokenize(inputText, {
-      strictness: c.strictness,
-      allowInProgress: interimText.trim().length === 0,
-    });
-    const interim = tokenize(interimText, { strictness: c.strictness, interim: true });
-    const tokens = [...committed, ...interim];
+    const tokens = [
+      ...tokenize(speechText, { strictness: c.strictness }),
+      ...tokenize(interimText, { strictness: c.strictness, interim: true }),
+      ...tokenize(inputText, { strictness: c.strictness, allowInProgress: true }),
+    ];
 
     let targets = state.targets;
     let alignment: Alignment;
@@ -194,12 +204,14 @@ export const useTest = create<TestState>((set, get) => {
       }
     }
 
-    set({ inputText, interimText, tokens, alignment, targets });
+    set({ inputText, speechText, interimText, tokens, alignment, targets });
 
     const now = performance.now();
+    const voiceTimed = state.dictation || c.engine === "flow";
     if (state.status === "idle" && tokens.length > 0) {
       const pending = state.pendingStartAt;
-      const startAt = pending !== null && now - pending < 2500 ? pending : now;
+      let startAt = pending !== null && now - pending < 4000 ? pending : now;
+      if (voiceTimed && state.firstVoiceAt !== null && now - state.firstVoiceAt < 120000) startAt = state.firstVoiceAt;
       startTest(startAt);
     }
 
@@ -213,7 +225,7 @@ export const useTest = create<TestState>((set, get) => {
           (last.status === "partial" && wordsMatch(targets[n - 1], last.input, c.strictness));
         if (done) {
           let endAt = now;
-          if (c.engine === "flow" && state.lastVoiceAt > 0 && now - state.lastVoiceAt < 5000) {
+          if (voiceTimed && state.lastVoiceAt > 0 && now - state.lastVoiceAt < 5000) {
             endAt = Math.min(now, state.lastVoiceAt + 150);
           }
           get().finish(endAt);
@@ -258,6 +270,7 @@ export const useTest = create<TestState>((set, get) => {
     targets: [],
     quote: null,
     inputText: "",
+    speechText: "",
     interimText: "",
     tokens: [],
     alignment: EMPTY_ALIGNMENT,
@@ -266,7 +279,11 @@ export const useTest = create<TestState>((set, get) => {
     snapshots: [],
     result: null,
     pendingStartAt: null,
+    firstVoiceAt: null,
     lastVoiceAt: 0,
+    dictation: false,
+    usedSpeech: false,
+    usedDictation: false,
 
     newTest: (opts) => {
       stopTimer();
@@ -289,6 +306,7 @@ export const useTest = create<TestState>((set, get) => {
         targets,
         quote,
         inputText: "",
+        speechText: "",
         interimText: "",
         tokens: [],
         alignment: EMPTY_ALIGNMENT,
@@ -297,31 +315,49 @@ export const useTest = create<TestState>((set, get) => {
         snapshots: [],
         result: null,
         pendingStartAt: null,
+        firstVoiceAt: null,
         lastVoiceAt: 0,
+        usedSpeech: false,
+        usedDictation: false,
       });
     },
 
-    setInput: (text) => recompute(text, get().interimText),
+    setInput: (text, dictated) => {
+      if (dictated) set({ usedDictation: true });
+      const s = get();
+      recompute(text, s.speechText, s.interimText);
+    },
 
     commitSpeech: (text) => {
       const s = get();
       if (s.status === "finished") return;
-      const base = s.inputText;
-      const sep = base.length === 0 || /\s$/.test(base) ? "" : " ";
-      recompute(`${base}${sep}${text.trim()} `, "");
+      const base = s.speechText;
+      const sep = base.length === 0 ? "" : " ";
+      set({ usedSpeech: true });
+      recompute(s.inputText, `${base}${sep}${text.trim()}`, "");
     },
+
+    clearSpeech: () => {
+      const s = get();
+      set({ usedSpeech: false });
+      if (s.speechText || s.interimText) recompute(s.inputText, "", "");
+    },
+
+    setDictation: (on) => set({ dictation: on }),
 
     setInterim: (text) => {
       const s = get();
       if (s.status === "finished" || text === s.interimText) return;
-      recompute(s.inputText, text);
+      if (text) set({ usedSpeech: true });
+      recompute(s.inputText, s.speechText, text);
     },
 
     noteVoiceStart: (at) => {
       const s = get();
       if (s.status !== "idle") return;
-      set({ pendingStartAt: at, lastVoiceAt: at });
-      if (getConfig().engine === "flow") startTest(at);
+      const newUtterance = s.firstVoiceAt === null || at - s.lastVoiceAt > 2500;
+      set({ pendingStartAt: at, lastVoiceAt: at, firstVoiceAt: newUtterance ? at : s.firstVoiceAt });
+      if (getConfig().engine === "flow" || s.dictation) startTest(at);
     },
 
     noteVoiceActivity: (at) => set({ lastVoiceAt: at }),
@@ -371,7 +407,9 @@ export const useTest = create<TestState>((set, get) => {
       });
 
       let invalid: string | null = null;
-      if (time < 1.5 && c.mode !== "time") invalid = "test too short";
+      if (time < 1.5 && c.mode !== "time") {
+        invalid = s.usedDictation && s.firstVoiceAt === null ? "turn on the mic so we can time you" : "test too short";
+      }
       else if (s.tokens.length === 0) invalid = "afk detected";
 
       const base = {
@@ -380,7 +418,7 @@ export const useTest = create<TestState>((set, get) => {
         language: c.language.replace("_", " "),
         punctuation: c.punctuation,
         numbers: c.numbers,
-        engine: c.engine,
+        engine: s.usedDictation ? ("flow" as const) : s.usedSpeech ? ("builtin" as const) : ("keyboard" as const),
       };
       const pbs = loadPbs();
       const key = pbKey(base);

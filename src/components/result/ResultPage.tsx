@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type MouseEvent } from "react";
+import { lazy, Suspense, useLayoutEffect, useRef, useState, type MouseEvent } from "react";
 import { QUOTE_GROUPS } from "../../lib/words";
 import { captureElement, copyImageOrDownload, screenshotFilename } from "../../lib/screenshot";
 import { useConfig } from "../../store/config";
@@ -6,9 +6,10 @@ import { useTest, type TestResult } from "../../store/test";
 import { notify, useUi } from "../../store/ui";
 import { useVoice } from "../../store/voice";
 import { LogoIcon } from "../Logo";
-import { ResultChart } from "./ResultChart";
 import { WordsHistory } from "./WordsHistory";
 import "../../styles/result.css";
+
+const ResultChart = lazy(() => import("./ResultChart").then((m) => ({ default: m.ResultChart })));
 
 const countedResults = new Set<number>();
 let sessionSeconds = 0;
@@ -44,7 +45,7 @@ function testTypeLines(r: TestResult): string[] {
     if (r.punctuation) lines.push("punctuation");
     if (r.numbers) lines.push("numbers");
   }
-  lines.push(r.engine === "flow" ? "wispr flow" : "built-in");
+  lines.push(r.engine === "flow" ? "wispr flow" : r.engine === "keyboard" ? "keyboard" : "voice");
   return lines;
 }
 
@@ -158,7 +159,9 @@ export function ResultPage() {
               </div>
             </div>
           </div>
-          <ResultChart result={r} />
+          <Suspense fallback={<div className="resultChart" />}>
+            <ResultChart result={r} />
+          </Suspense>
         </div>
 
         <div className="resultStats">

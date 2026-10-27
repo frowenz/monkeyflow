@@ -52,6 +52,11 @@ export class MicMonitor {
     this.loop();
   }
 
+  /** AudioContexts created without a user gesture start suspended. */
+  resumeAudio(): void {
+    if (this.ctx?.state === "suspended") void this.ctx.resume().catch(() => {});
+  }
+
   stop(): void {
     cancelAnimationFrame(this.raf);
     this.stream?.getTracks().forEach((t) => t.stop());

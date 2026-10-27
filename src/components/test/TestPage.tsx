@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
 import { useUi } from "../../store/ui";
+import { onDictationDetected } from "../../store/voice";
 import { ResultPage } from "../result/ResultPage";
 import { TestConfig } from "../TestConfig";
 import { LiveStats } from "./LiveStats";
@@ -70,8 +71,13 @@ function TestView() {
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onChange={(e) => {
-            if (useTest.getState().status === "finished") return;
-            useTest.getState().setInput(e.target.value.replace(/\n/g, " "));
+            const test = useTest.getState();
+            if (test.status === "finished") return;
+            const next = e.target.value.replace(/\n/g, " ");
+            // keystrokes insert one character; dictation apps paste whole phrases
+            const dictated = next.length - test.inputText.length >= 2;
+            if (dictated) onDictationDetected();
+            useTest.getState().setInput(next, dictated);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") e.preventDefault();

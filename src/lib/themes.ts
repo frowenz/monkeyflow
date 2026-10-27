@@ -36,6 +36,15 @@ export function applyTheme(name: string): void {
   root.setProperty("--error-extra-color", t.errorExtra);
   root.setProperty("--colorful-error-color", t.colorfulError);
   root.setProperty("--colorful-error-extra-color", t.colorfulErrorExtra);
+  try {
+    const vars: Record<string, string> = {};
+    for (const key of ["--bg-color", "--main-color", "--caret-color", "--sub-color", "--sub-alt-color", "--text-color", "--error-color", "--error-extra-color", "--colorful-error-color", "--colorful-error-extra-color"]) {
+      vars[key] = root.getPropertyValue(key);
+    }
+    localStorage.setItem("monkeyflow-theme-vars", JSON.stringify(vars));
+  } catch {
+    /* storage unavailable */
+  }
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", t.bg);
   updateFavicon(t);

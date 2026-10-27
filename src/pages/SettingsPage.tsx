@@ -102,15 +102,15 @@ const GROUPS: GroupSpec[] = [
         icon: "fas fa-microphone",
         title: "voice engine",
         description:
-          "Built-in uses your browser's speech recognition and lights words up as you say them. Flow lets Wispr Flow or any dictation app type into the test, and uses your mic only to time you.",
+          "Auto uses your browser's speech recognition and lights words up as you say them. If Wispr Flow (or any dictation app) types into the test, it takes over automatically and your mic only keeps time. Wispr flow only skips the browser's recognition entirely.",
         keywords: "wispr flow dictation builtin speech recognition",
         control: (
           <OptionButtons
             setting="engine"
             after={restartTest}
             options={[
-              { value: "builtin", label: "built-in" },
-              { value: "flow", label: "wispr flow" },
+              { value: "builtin", label: "auto" },
+              { value: "flow", label: "wispr flow only" },
             ]}
           />
         ),
@@ -507,8 +507,8 @@ export function SettingsPage() {
       <div className="settingsNotice">
         <i className="fas fa-microphone-alt noticeIcon" />
         <div>
-          Monkey Flow needs your microphone. The built-in engine streams your voice to your browser's speech
-          recognition, while flow mode only listens to time you and lets Wispr Flow do the typing.
+          Monkey Flow needs your microphone. It streams your voice to your browser's speech recognition - or, when
+          Wispr Flow is doing the typing, only listens to time you.
         </div>
         <button type="button" className="button noticeButton" onClick={testMicrophone}>
           test microphone

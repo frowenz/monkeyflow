@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useConfig } from "../../store/config";
 import { useTest } from "../../store/test";
 import { subscribeLevel, toggleListening, useVoice } from "../../store/voice";
@@ -10,7 +10,7 @@ export function refocusInput() {
 export function MicButton({ className = "" }: { className?: string }) {
   const listening = useVoice((s) => s.listening);
   const recognizer = useVoice((s) => s.recognizer);
-  const engine = useConfig((s) => s.engine);
+  const dictation = useTest((s) => s.dictation);
   const ringRef = useRef<HTMLSpanElement>(null);
 
   useEffect(
@@ -21,20 +21,15 @@ export function MicButton({ className = "" }: { className?: string }) {
     [],
   );
 
-  const starting = listening && engine === "builtin" && recognizer === "starting";
-  const label = listening
-    ? "stop listening"
-    : engine === "flow"
-      ? "start mic (times your wispr flow dictation)"
-      : "start listening";
+  const starting = listening && !dictation && recognizer === "starting";
 
   return (
     <button
       type="button"
       id="micButton"
       className={`textButton ${listening ? "listening" : ""} ${starting ? "starting" : ""} ${className}`}
-      aria-label={label}
-      data-balloon-pos="down"
+      aria-label={listening ? "stop listening" : "start listening"}
+      data-balloon-pos="left"
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => {
         toggleListening();
@@ -50,21 +45,25 @@ export function MicButton({ className = "" }: { className?: string }) {
 export function VoiceControls() {
   const status = useTest((s) => s.status);
   const interim = useTest((s) => s.interimText);
-  const lastTokens = useTest((s) => s.tokens);
+  const speechText = useTest((s) => s.speechText);
+  const dictation = useTest((s) => s.dictation);
   const listening = useVoice((s) => s.listening);
-  const engine = useConfig((s) => s.engine);
   const showTranscript = useConfig((s) => s.showTranscript);
 
-  const heard = lastTokens
-    .slice(-12)
-    .filter((t) => !t.interim)
-    .map((t) => t.text)
-    .join(" ");
+  const heard = speechText.split(/\s+/).slice(-12).join(" ");
 
-  let hint: string | null = null;
+  let hint: ReactNode = null;
   if (status === "idle") {
-    if (engine === "builtin") hint = listening ? "listening... start reading" : "click the mic or press enter, then read the words out loud";
-    else hint = listening ? "mic on - hold your wispr flow key and read" : "focus here and dictate with wispr flow - turn on the mic for accurate timing";
+    hint = listening ? (
+      <>
+        <span className="listeningDot" />
+        {dictation ? "mic on - dictate with wispr flow" : "listening - start reading"}
+      </>
+    ) : (
+      <>
+        <kbd>enter</kbd> or click the mic, then read out loud
+      </>
+    );
   }
 
   return (
@@ -87,7 +86,7 @@ export function VoiceControls() {
         </button>
       </div>
       <div className={`voiceHint ${hint ? "" : "hidden"}`}>{hint ?? "\u00a0"}</div>
-      {showTranscript && engine === "builtin" && (
+      {showTranscript && !dictation && (
         <div className={`transcript ${listening && status === "active" && (heard || interim) ? "" : "hidden"}`}>
           <span className="final">{heard}</span> <span className="interim">{interim}</span>
         </div>
