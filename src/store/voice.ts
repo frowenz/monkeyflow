@@ -80,7 +80,8 @@ const recognizerHandlers: RecognizerEvents = {
     stopListening();
   },
   onActivity: () => {
-    useTest.getState().noteVoiceActivity(performance.now());
+    // with the mic meter running, voice activity timing comes from the audio itself
+    if (!useVoice.getState().micReady) useTest.getState().noteVoiceActivity(performance.now());
   },
 };
 

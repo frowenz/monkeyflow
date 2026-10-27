@@ -228,7 +228,8 @@ export const useTest = create<TestState>((set, get) => {
           (last.status === "partial" && wordsMatch(targets[n - 1], last.input, c.strictness));
         if (done) {
           let endAt = now;
-          if (voiceTimed && state.lastVoiceAt > 0 && now - state.lastVoiceAt < 5000) {
+          // recognizers report the last word ~0.5-1s after it was said; end when the voice stopped
+          if ((voiceTimed || state.usedSpeech) && state.lastVoiceAt > 0 && now - state.lastVoiceAt < 5000) {
             endAt = Math.min(now, state.lastVoiceAt + 150);
           }
           get().finish(endAt);
